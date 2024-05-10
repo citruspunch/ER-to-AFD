@@ -64,5 +64,62 @@ public class ER{
     }
     System.out.print(" ]");
   }
+
+  public void toGLD(char[] alfabeto, int[][] afdTransiciones, int cantEstados, int[] estadosFinales, int estadoInicial){
+    int estadoError = 0;
+    ArrayList<String> GLD = new ArrayList<String>();
+
+    // Crear un array de caracteres con los nombres de los simbolos no terminales
+    char[] noTerminales = new char[cantEstados];
+
+    for (int i = 0; i < cantEstados; i++) {
+      if (i == estadoError){
+        noTerminales[i] = (char) ('A' + cantEstados - 1);
+      } else if(i == estadoInicial){
+        noTerminales[i] = 'S';
+      }else if(!((char) ('A' + i) == 'S')){
+        noTerminales[i] = (char) ('A' + i);
+      }
+    }
+
+    for (int col=0; col<cantEstados; col++){
+      for (int row=0; row<alfabeto.length; row++){
+        if (col == estadoError){
+          GLD.add(noTerminales[col] + " -> " + alfabeto[row] + noTerminales[estadoError]);
+        } else if (col == estadoInicial){
+          GLD.add(noTerminales[col] + " -> " + alfabeto[row] + noTerminales[afdTransiciones[row][col]]);
+        } else {
+          boolean estadoFinal = isFinal(col, estadosFinales);
+          GLD.add(noTerminales[col] + " -> " + alfabeto[row] + noTerminales[afdTransiciones[row][col]]);
+          // Si es estado Final se agrega regla de produccion con lambda
+          if (estadoFinal){
+            GLD.add(noTerminales[col] + " -> λ");
+          }
+        }
+      }
+    }
+    writeToFile(GLD);
+  }
+
+  private boolean isFinal(int estado, int[] estadosFinales){
+    for (int i = 0; i < estadosFinales.length; i++) {
+      if (estado == estadosFinales[i]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void writeToFile(ArrayList<String> GLD) {
+    try {
+      FileWriter writer = new FileWriter("GLD.gld");
+      for (String str : GLD) {
+        writer.write(str + System.lineSeparator());
+      }
+      writer.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
   
 }
