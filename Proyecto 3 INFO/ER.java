@@ -1,60 +1,17 @@
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.*;
 
 
 public class ER{
 
   private static String regExp;
-  private static int[] regExpNum;
-  private static int contRegExp;
-  private static HashMap<Integer, int[]> firstPos;
 
   public ER(String er){
     regExp = er;
-
   }
 
-  public static String ExtendRE(String re){
-    //ER -> ER# 
-    StringBuilder extendedRE = new StringBuilder();
-
-    extendedRE.append(re);
-    extendedRE.append("#");
-
-    return extendedRE.toString();
-  }
-
-  public static int[] regNumerator(String re){
-    //[0,1,..,n] posiciones de ER
-    contRegExp = 0;
-    for(char i : re.toCharArray()){
-      if(!(i == '*' || i == '+' || i == '|' || i == '(' || i == ')' || i == '[' || i == ']')){
-        contRegExp += 1;
-      }
-    }
-
-    regExpNum = new int[contRegExp];
-
-    for(int m = 0; m < contRegExp; m++){
-      regExpNum[m] = m;
-    }
-    
-    toStringList(regExpNum);
-
-    return regExpNum;
-  }
-
-  public static HashMap<Integer, int[]> firstPosition(){
-    
-    return firstPos;
-  }
-
-
-
-
-
-
-  public void toGLD(char[] alfabeto, int[][] afdTransiciones, int cantEstados, int[] estadosFinales, int estadoInicial){
+  public void toGLD(char[] alfabeto, int[][] afdTransiciones, int cantEstados, int[] estadosFinales, int estadoInicial, boolean archivo){
     int estadoError = 0;
     ArrayList<String> GLD = new ArrayList<String>();
 
@@ -87,7 +44,9 @@ public class ER{
         }
       }
     }
-    writeToFile(GLD);
+    if (archivo){
+      writeToFile(GLD);
+    }
   }
 
   private boolean isFinal(int estado, int[] estadosFinales){
@@ -111,13 +70,62 @@ public class ER{
     }
   }
 
+  public void minimizarAFD(int[][] afdTransiciones, char[] alfabeto, int cantEstados, int[] estadosFinales, int estadoInicial){
+    // Implementar minimizacion de AFD
+    int finales = estadosFinales.length;
+    int noFinales = cantEstados - finales;
+    ArrayList<ArrayList<Integer>> pi = new ArrayList<ArrayList<Integer>>();
+    ArrayList<Integer> piNoFinales = new ArrayList<>();
+    ArrayList<Integer> piFinales  = new ArrayList<>();
+    for (int i = 0; i < cantEstados; i++) {
+      if (isFinal(i, estadosFinales)) {
+        piFinales.add(i);
+      } else {
+        piNoFinales .add(i);
+      }
+    }
+    pi.add(piNoFinales);
+    pi.add(piFinales);
+    ArrayList<ArrayList<Integer>> siguiente = new ArrayList<ArrayList<Integer>>();
+    ArrayList<ArrayList<Integer>> pi2 = new ArrayList<ArrayList<Integer>>();
+    while (siguiente.size() != pi.size()) {
+      // Se copia pi en siguiente
+      siguiente = new ArrayList<ArrayList<Integer>>(pi);
+      pi2 = new ArrayList<ArrayList<Integer>>();
+      // Se divide cada conjunto de pi en subconjuntos
+      for (int i = 0; i < pi.size(); i++) {
+        ArrayList<Integer> p = new ArrayList<>(pi.get(i));
+        // Se divide el conjunto p en subconjuntos para ver sus transiciones con cada letra del alfabeto
+        for (int j = 0; j < alfabeto.length; j++) { 
+          ArrayList<Integer> p1 = new ArrayList<>();
+          ArrayList<Integer> p2 = new ArrayList<>();
+          // Se recorre el conjunto p para ver sus transiciones con la letra j del alfabeto
+          for (int k = 0; k < p.size(); k++) {
+            // Si es el primer elemento se agrega al conjunto p1
+            if (k == 0) {
+              p1.add(p.get(k));
+            } else {
+              if (afdTransiciones[j][p.get(k)] == afdTransiciones[j][p.get(k - 1)]) {
+                p1.add(p.get(k));
+              } else {
+                p2.add(p.get(k));
+              }
+            }
+          }
+          if (p1.size() > 0) {
+            pi2.add(p1);
+          }
+          if (p2.size() > 0) {
+            pi2.add(p2);
+          }
+        }
+      }
+      pi = new ArrayList<ArrayList<Integer>>(pi2);
+    }
+  }
+
   public static void main(String args[]) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
-    System.out.println("write: ");
-    String prueba = teclado.readLine();
-    System.out.println(ExtendRE(prueba));
-    regNumerator(ExtendRE(prueba));
-
     
     char[] alfabeto = {'a', 'b', 'c'};
     System.out.println("ALFABETO: " + Arrays.toString(alfabeto));
@@ -135,39 +143,28 @@ public class ER{
         break;
         /*
       case 2:
-        int[][] afdTransiciones = getAFDTransiciones(alfabeto, re);
-        int cantEstados = getCantEstados(afdTransiciones);
-        int[] estadosFinales = getEstadosFinales(afdTransiciones);
+        int[][] afdTransiciones = getAFDTransiciones();
+        int cantEstados = getCantEstados();
+        int[] estadosFinales = getEstadosFinales();
         int estadoInicial = 1;
-        toGLD(alfabeto, afdTransiciones, cantEstados, estadosFinales, estadoInicial);
+        boolean imprimir = true;
+        toGLD(alfabeto, afdTransiciones, cantEstados, estadosFinales, estadoInicial, imprimir);
         // Implementar conversion a GLD
         break;
       case 3:
         // Implementar conversion a AFD
         // Implementar conversion a GLD
-        int[][] afdTransiciones = getAFDTransiciones(alfabeto, re);
-        int cantEstados = getCantEstados(afdTransiciones);
-        int[] estadosFinales = getEstadosFinales(afdTransiciones);
+        int[][] afdTransiciones = getAFDTransiciones();
+        int cantEstados = getCantEstados();
+        int[] estadosFinales = getEstadosFinales();
         int estadoInicial = 1;
-        toGLD(alfabeto, afdTransiciones, cantEstados, estadosFinales, estadoInicial);
+        boolean imprimir = true;
+        toGLD(alfabeto, afdTransiciones, cantEstados, estadosFinales, estadoInicial, imprimir);
         break;
       default:
         System.out.println("Opcion no valida");
         break;
       */
     }
-  }
-
-  public static void toStringList(int[] list){
-    System.out.print("[ ");
-    for(int k : list){
-      if(k == list.length- 1){
-        System.out.print(String.valueOf(k));
-      } else {
-        System.out.print(String.valueOf(k)+",");
-      }
-      
-    }
-    System.out.print(" ]");
   }
 }
