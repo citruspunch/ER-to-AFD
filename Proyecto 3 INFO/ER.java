@@ -71,9 +71,6 @@ public class ER{
   }
 
   public void minimizarAFD(int[][] afdTransiciones, char[] alfabeto, int cantEstados, int[] estadosFinales, int estadoInicial){
-    // Implementar minimizacion de AFD
-    int finales = estadosFinales.length;
-    int noFinales = cantEstados - finales;
     ArrayList<ArrayList<Integer>> pi = new ArrayList<ArrayList<Integer>>();
     ArrayList<Integer> piNoFinales = new ArrayList<>();
     ArrayList<Integer> piFinales  = new ArrayList<>();
@@ -87,42 +84,43 @@ public class ER{
     pi.add(piNoFinales);
     pi.add(piFinales);
     ArrayList<ArrayList<Integer>> siguiente = new ArrayList<ArrayList<Integer>>();
-    ArrayList<ArrayList<Integer>> pi2 = new ArrayList<ArrayList<Integer>>();
-    while (siguiente.size() != pi.size()) {
-      // Se copia pi en siguiente
+    while (true) {
       siguiente = new ArrayList<ArrayList<Integer>>(pi);
-      pi2 = new ArrayList<ArrayList<Integer>>();
-      // Se divide cada conjunto de pi en subconjuntos
-      for (int i = 0; i < pi.size(); i++) {
-        ArrayList<Integer> p = new ArrayList<>(pi.get(i));
-        // Se divide el conjunto p en subconjuntos para ver sus transiciones con cada letra del alfabeto
-        for (int j = 0; j < alfabeto.length; j++) { 
-          ArrayList<Integer> p1 = new ArrayList<>();
-          ArrayList<Integer> p2 = new ArrayList<>();
-          // Se recorre el conjunto p para ver sus transiciones con la letra j del alfabeto
-          for (int k = 0; k < p.size(); k++) {
-            // Si es el primer elemento se agrega al conjunto p1
-            if (k == 0) {
-              p1.add(p.get(k));
-            } else {
-              if (afdTransiciones[j][p.get(k)] == afdTransiciones[j][p.get(k - 1)]) {
-                p1.add(p.get(k));
-              } else {
-                p2.add(p.get(k));
-              }
-            }
+      // Recorre cada subconjunto
+      for (ArrayList<Integer> subconjunto : siguiente) {
+        Map<ArrayList<Integer>, ArrayList<Integer>> nuevosSubConjuntos = new HashMap<>();
+        // Recorre cada estado del subconjunto
+        for (int estado : subconjunto) {
+          ArrayList<Integer> transitions = new ArrayList<>();
+          // Recorre cada letra del alfabeto
+          for (int j = 0; j < alfabeto.length; j++) {
+            int transicion = afdTransiciones[j][estado];
+            int groupIndex = encontrarConjunto(pi, transicion);
+            transitions.add(groupIndex);
           }
-          if (p1.size() > 0) {
-            pi2.add(p1);
+          if (!nuevosSubConjuntos.containsKey(transitions)) {
+            nuevosSubConjuntos.put(transitions, new ArrayList<>());
           }
-          if (p2.size() > 0) {
-            pi2.add(p2);
-          }
+          nuevosSubConjuntos.get(transitions).add(estado);
         }
+        pi.remove(subconjunto);
+        pi.addAll(nuevosSubConjuntos.values());
       }
-      pi = new ArrayList<ArrayList<Integer>>(pi2);
+      // Si tiene las mismas particiones terminamos
+      if (siguiente.size() == pi.size()) {
+        break;
+      }
     }
   }
+
+  private int encontrarConjunto(ArrayList<ArrayList<Integer>> conjunto, int estado) {
+    for (int i = 0; i < conjunto.size(); i++) {
+      if (conjunto.get(i).contains(estado)) {
+        return i;
+      }
+    }
+    return -1;
+}
 
   public static void main(String args[]) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
