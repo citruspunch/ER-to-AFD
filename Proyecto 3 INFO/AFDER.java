@@ -82,7 +82,7 @@ class Node{
 
 public class AFDER{
   private static char[] operadores = {'|','*','.','+'};
-  private static char[] alphabet = {'a','b','c','d'};
+  private static char[] alphabet = {'a','b','c','d','#'};
 
   public static boolean inAlfabeto(char r){
     for(int l = 0; l<alphabet.length; l++){
@@ -93,7 +93,7 @@ public class AFDER{
     return false;
   }
 
-  public static String ExtendRE(String re){
+  public static String extendRE(String re){
     //ER -> ER# 
     StringBuilder extendedRE = new StringBuilder();
     boolean foundParentesis = false;
@@ -107,6 +107,7 @@ public class AFDER{
       } else if (reActual == ')'){
         foundParentesis = false;
       } else if(reActual == '|' && foundParentesis == false){
+        extendedRE.append('.');
         extendedRE.append("#");
       } 
       extendedRE.append(reActual);
@@ -127,54 +128,173 @@ public class AFDER{
         }
       }
     }
-
+    extendedRE.append('.');
     extendedRE.append("#");
 
     return extendedRE.toString();
   }
 
-  public void kleeneOperador(Node regex){
+  public static Node kleeneOperador(Node regex){
     Node operador = new Node("*");
     regex.setOperador(operador);
     operador.setDerivado1(regex);
+    return operador;
   }
 
-  public void concatOperador(Node regex1, Node regex2){
+  public static Node concatOperador(Node regex1, Node regex2){
     Node operador = new Node(".");
     regex1.setOperador(operador);
     regex2.setOperador(operador);
     operador.setDerivado1(regex1);
     operador.setDerivado2(regex2);
+    return operador;
   }
 
-  public void or(Node regex1, Node regex2){
-    Node operador = new Node(".");
+  public static Node orOperador(Node regex1, Node regex2){
+    Node operador = new Node("|");
     regex1.setOperador(operador);
     regex2.setOperador(operador);
     operador.setDerivado1(regex1);
     operador.setDerivado2(regex2);
+    return operador;
   }
 
-  public void regex(String expresion, int num){
+  public static Node regex(String expresion, int num){
     Node regex = new Node(expresion,num);
+    return regex;
   }
 
+  public static int jerarquia(char op){
+    switch(op){
+        case('*'):
+        return 3;
 
+        case('.'):
+        return 2;
 
+        case('|'):
+        return 1;
 
+        default:
+        return 0;
+    }
+  }
 
+  public static Node sintaxis(String regex){
+    regex = extendRE(regex);
+     ArrayList<Character> operators = new ArrayList<>();
+    ArrayList<Node> silabas = new ArrayList<>();
+    int posicion = 0;
 
+    for(int i = 0; i<regex.length(); i++){
+      char reActual = regex.charAt(i); 
+      if(inAlfabeto(reActual)){
+        silabas.add(regex(String.valueOf(reActual),++posicion));
+      }
+      if(operators.isEmpty() || reActual == '('){
+        operators.add(reActual);
+      } else if(reActual == '('){
+        while(operators.get(operators.size()-1) != '('){
+          char x = operators.get(operators.size()-1);
+          
+          if(x=='*'){
+            Node regex0 = silabas.remove(silabas.size()-1);
+            silabas.add(kleeneOperador(regex0));
+            
+          }else if(x=='.'){
+            Node regex1 = silabas.remove(silabas.size()-1);
+            Node regex2 = silabas.remove(silabas.size()-1);
+            silabas.add(concatOperador(regex1,regex2));
+            
+          }else if(x=='|'){
+            Node regex1 = silabas.remove(silabas.size()-1);
+            Node regex2 = silabas.remove(silabas.size()-1);
+            silabas.add(orOperador(regex1,regex2));
+          }
+          operators.remove(operators.size()-1);
+        }
+        operators.remove(operators.size()-1);
+      } else {
+        while(!operators.isEmpty() && jerarquia(operators.get(operators.size()-1))>=jerarquia(reActual)){
+          
+          char x = operators.get(operators.size()-1);
+          if(x=='*'){
+            Node regex0 = silabas.remove(silabas.size()-1);
+            silabas.add(kleeneOperador(regex0));
 
+          }else if(x=='.'){
+            Node regex1 = silabas.remove(silabas.size()-1);
+            Node regex2 = silabas.remove(silabas.size()-1);
+            silabas.add(concatOperador(regex1,regex2));
 
+          }else if(x=='|'){
+            Node regex1 = silabas.remove(silabas.size()-1);
+            Node regex2 = silabas.remove(silabas.size()-1);
+            silabas.add(orOperador(regex1,regex2));
+          }
+          operators.remove(operators.size()-1);
+        }
+        operators.add(reActual);
+      }
+    }
+    while(!operators.isEmpty()){
+      char x = operators.get(operators.size()-1);
+      if(x=='*'){
+        Node regex0 = silabas.remove(silabas.size()-1);
+        silabas.add(kleeneOperador(regex0));
+  
+      }else if(x=='.'){
+        Node regex1 = silabas.remove(silabas.size()-1);
+        Node regex2 = silabas.remove(silabas.size()-1);
+        silabas.add(concatOperador(regex1,regex2));
+  
+      }else if(x=='|'){
+        Node regex1 = silabas.remove(silabas.size()-1);
+        Node regex2 = silabas.remove(silabas.size()-1);
+        silabas.add(orOperador(regex1,regex2));
+      }
+      operators.remove(operators.size()-1);
+    }
+    
+    Node syntax = silabas.get(0);
+    return syntax;
+  }
 
+  public static void printN(Node nodo, String separador, int capa){
+    StringBuilder tab = new StringBuilder();
+    for(int i = 0; i<capa; i++){
+      tab.append("   ");
+    }
+    
+    System.out.println(separador+tab.toString()+ nodo.getRegex());
+    switch(nodo.getRegex()){
+      case "*":
+        System.out.println(separador+"/"+tab.toString());
+        printN(nodo.getDerivado1(),separador,capa+1);
+        break;
+      case "|":
+        System.out.println(separador+"/"+tab.toString()+"\\");
+        printN(nodo.getDerivado1(),separador,capa+1);
+        printN(nodo.getDerivado2(),separador,capa+1);
+        break;
+      case ".":
+        System.out.println(separador+"/"+tab.toString()+"\\");
+        printN(nodo.getDerivado1(),separador,capa+1);
+        printN(nodo.getDerivado2(),separador,capa+1);
+        break;
+    }
+  }
   
   public static void main(String args[]) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
     System.out.println("write: ");
     String prueba = teclado.readLine();
-    System.out.println(ExtendRE(prueba));
-    //regNumerator(ExtendRE(prueba));
+    System.out.println(extendRE(prueba));
     System.out.print("\n");
+    Node test = sintaxis(extendRE(prueba));
+    printN(test, "",1);
+    
+    
   }
 
 }
