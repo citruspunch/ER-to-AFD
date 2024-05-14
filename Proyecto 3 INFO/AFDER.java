@@ -78,6 +78,8 @@ class Node{
   public HashSet<Integer> getfollowPos(){
     return this.followPos;
   }
+
+
 }
 
 public class AFDER{
@@ -255,33 +257,33 @@ public class AFDER{
       }
       operators.remove(operators.size()-1);
     }
-    
     Node syntax = silabas.get(0);
     return syntax;
   }
 
-  public static void printN(Node nodo, String separador, int capa){
-    StringBuilder tab = new StringBuilder();
+  public static void printN(Node nodo, int capa){
+    StringBuilder space = new StringBuilder();
     for(int i = 0; i<capa; i++){
-      tab.append("   ");
+      space.append(" ");
     }
     
-    System.out.println(separador+tab.toString()+ nodo.getRegex());
-    switch(nodo.getRegex()){
-      case "*":
-        System.out.println(separador+"/"+tab.toString());
-        printN(nodo.getDerivado1(),separador,capa+1);
-        break;
-      case "|":
-        System.out.println(separador+"/"+tab.toString()+"\\");
-        printN(nodo.getDerivado1(),separador,capa+1);
-        printN(nodo.getDerivado2(),separador,capa+1);
-        break;
-      case ".":
-        System.out.println(separador+"/"+tab.toString()+"\\");
-        printN(nodo.getDerivado1(),separador,capa+1);
-        printN(nodo.getDerivado2(),separador,capa+1);
-        break;
+    if(nodo == null){
+      System.out.print("");
+    }
+
+    System.out.print(space.toString()+nodo.getRegex());
+    
+    if(nodo.getRegex().equals(".")){
+      System.out.println(space.toString()+"\n/ \\");
+      printN(nodo.getDerivado1(),0);
+      printN(nodo.getDerivado2(),1);
+    } else if(nodo.getRegex().equals("|")){
+      System.out.println(space.toString()+"\n/ \\");
+      printN(nodo.getDerivado1(),0);
+      printN(nodo.getDerivado2(),1);
+    } else if(nodo.getRegex().equals("*")){
+      System.out.println(space.toString()+"\n/ ");
+      printN(nodo.getDerivado1(),0);
     }
   }
   
@@ -291,10 +293,8 @@ public class AFDER{
     String prueba = teclado.readLine();
     System.out.println(extendRE(prueba));
     System.out.print("\n");
-    Node test = sintaxis(extendRE(prueba));
-    printN(test, "",1);
-    
-    
+    Node test = sintaxis(prueba);
+    printN(test,0);   
   }
 
 }
