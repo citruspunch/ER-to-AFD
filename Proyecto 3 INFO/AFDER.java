@@ -27,6 +27,14 @@ class Node{
     this.num = num;
   }
 
+  public int getNum(){
+    return this.num;
+  }
+
+  public void setNum(int num){
+    this.num = num;
+  }
+
   public String getRegex(){
     return this.regex;
   }
@@ -71,12 +79,24 @@ class Node{
     return this.firstPos;
   }
 
+  public void addFirst(int num){
+    this.firstPos.add(num);
+  }
+
   public HashSet<Integer> getlastPos(){
     return this.lastPos;
   }
 
+  public void addLast(int num){
+    this.lastPos.add(num);
+  }
+
   public HashSet<Integer> getfollowPos(){
     return this.followPos;
+  }
+
+  public void addFP(int num){
+    this.followPos.add(num);
   }
 
 
@@ -99,20 +119,62 @@ public class AFDER{
     //ER -> ER# 
     StringBuilder extendedRE = new StringBuilder();
     boolean foundParentesis = false;
-
+    StringBuilder positivaParentesis = new StringBuilder();
+    StringBuilder aux = new StringBuilder();
+    int cont = 0;
+    ArrayList<Integer> start = new ArrayList<Integer>();
+    ArrayList<Integer> end = new ArrayList<Integer>();
+    String sub = "";
+    
     for(int i = 0; i<re.length(); i++){
+      
       char reActual = re.charAt(i);
+      char reAux = re.charAt(i);
       char reNext = (i+1<re.length()) ? re.charAt(i+1):'\0';
-
+      char reAnt = (i-1>= 0) ? re.charAt(i-1):'\0';
+      
       if(reActual == '('){
         foundParentesis = true;
+        cont++;
+        start.add(i);
+        
       } else if (reActual == ')'){
         foundParentesis = false;
+        cont--;
+        end.add(i);
+  
       } else if(reActual == '|' && foundParentesis == false){
         extendedRE.append('.');
         extendedRE.append("#");
       } 
-      extendedRE.append(reActual);
+      
+      if(reActual == '+'){
+        if (inAlfabeto(reAnt)) {
+          extendedRE.deleteCharAt(extendedRE.length()-1);
+          extendedRE.append(reAnt);
+          extendedRE.append('.');
+          extendedRE.append(reAnt);
+          extendedRE.append('*');
+        } else if(reAnt == ')'){
+          if( cont == 0 || cont > 0){
+            aux.setLength(0); //borra lo que habia en aux
+            aux.append('.');
+            aux.append('(');
+            sub = extendRE(re.substring(start.remove(start.size()-1), end.remove(end.size()-1)));
+            aux.append(sub.substring(0,sub.length()-2));
+            aux.append(')');
+            aux.append('*');
+            if(inAlfabeto(reNext) || reNext == '('){
+              aux.append('.');
+            }
+            extendedRE.append(aux);
+          } 
+        }
+      } 
+      
+      if(reActual != '+'){
+        extendedRE.append(reActual);
+      }
 
       if(i+1<re.length()){
         if(inAlfabeto(reActual) && inAlfabeto(reNext)){
@@ -132,7 +194,6 @@ public class AFDER{
     }
     extendedRE.append('.');
     extendedRE.append("#");
-
     return extendedRE.toString();
   }
 
@@ -161,8 +222,15 @@ public class AFDER{
     return operador;
   }
 
+  /*public static Node positivaOperador(Node regex){
+    Node kleene = kleeneOperador(regex);
+    Node kleeneConcat = concatOperador(regex, kleene);
+    return kleeneConcat;
+  }*/
+
   public static Node regex(String expresion, int num){
     Node regex = new Node(expresion,num);
+    regex.addFirst(regex.getNum());
     return regex;
   }
 
@@ -184,7 +252,7 @@ public class AFDER{
 
   public static Node sintaxis(String regex){
     regex = extendRE(regex);
-     ArrayList<Character> operators = new ArrayList<>();
+    ArrayList<Character> operators = new ArrayList<>();
     ArrayList<Node> silabas = new ArrayList<>();
     int posicion = 0;
 
@@ -192,10 +260,9 @@ public class AFDER{
       char reActual = regex.charAt(i); 
       if(inAlfabeto(reActual)){
         silabas.add(regex(String.valueOf(reActual),++posicion));
-      }
-      if(operators.isEmpty() || reActual == '('){
+      }else if(operators.isEmpty() || reActual == '('){
         operators.add(reActual);
-      } else if(reActual == '('){
+      } else if(reActual == ')'){
         while(operators.get(operators.size()-1) != '('){
           char x = operators.get(operators.size()-1);
           
@@ -257,6 +324,11 @@ public class AFDER{
       }
       operators.remove(operators.size()-1);
     }
+    
+    /*System.out.println("silabas:");
+    for (int i = 0; i < silabas.size(); i++) {
+        System.out.println("[" + i + "]: " + silabas.get(i).getRegex());
+    }*/
     Node syntax = silabas.get(0);
     return syntax;
   }
@@ -285,6 +357,10 @@ public class AFDER{
       System.out.println(space.toString()+"\n/ ");
       printN(nodo.getDerivado1(),0);
     }
+  }
+
+  public static void followPosition(Node arbol){
+    
   }
   
   public static void main(String args[]) throws Exception{
