@@ -5,25 +5,28 @@ import java.util.*;
 public class ER{
 
   private static String regExp;
+  public static final int estadoError = 0;
+  public static final int estadoInicial = 1;
 
   public ER(String er){
     regExp = er;
   }
 
-  public ArrayList<String> toGLD(char[] alfabeto, int[][] afdTransiciones, int cantEstados, int[] estadosFinales, int estadoInicial, boolean archivo){
-    int estadoError = 0;
+  public ArrayList<String> toGLD(char[] alfabeto, int[][] afdTransiciones, int cantEstados, int[] estadosFinales, boolean archivo){
     ArrayList<String> GLD = new ArrayList<String>();
 
-    // Crear un array de caracteres con los nombres de los simbolos no terminales
+    // Se crea un array de caracteres con los nombres de los simbolos no terminales
     char[] noTerminales = new char[cantEstados];
 
-    for (int i = 0; i < cantEstados; i++) {
+    for (int i = 1; i <= cantEstados; i++) {
       if (i == estadoError){
-        noTerminales[i] = (char) ('A' + cantEstados - 1);
+        noTerminales[i] = (char) ('A');
       } else if(i == estadoInicial){
         noTerminales[i] = 'S';
-      }else if(!((char) ('A' + i) == 'S')){
+      } else if(!((char) ('A' + i) == 'S')){
         noTerminales[i] = (char) ('A' + i);
+      } else {
+        noTerminales[i] = (char) ('A' + i + 1);
       }
     }
 
@@ -70,7 +73,7 @@ public class ER{
     }
   }
 
-  public void minimizarAFD(int[][] afdTransiciones, char[] alfabeto, int cantEstados, int[] estadosFinales, int estadoInicial){
+  public void minimizarAFD(int[][] afdTransiciones, char[] alfabeto, int cantEstados, int[] estadosFinales){
     ArrayList<ArrayList<Integer>> pi = new ArrayList<ArrayList<Integer>>();
     ArrayList<Integer> piNoFinales = new ArrayList<>();
     ArrayList<Integer> piFinales  = new ArrayList<>();
@@ -120,10 +123,9 @@ public class ER{
       }
     }
     return -1;
-}
+  }
 
   public boolean parsingAFD(String cuerda, int[][] AFD, int[] estadosFinales){
-    int estadoInicial = 1;
     int estadoActual = estadoInicial;
     for (char c: cuerda.toCharArray()){
       if (c != 'a' && c != 'b' && c != 'c'){
@@ -174,9 +176,8 @@ public class ER{
         int[][] afdTransiciones = getAFDTransiciones();
         int cantEstados = getCantEstados();
         int[] estadosFinales = getEstadosFinales();
-        int estadoInicial = 1;
         boolean imprimir = true;
-        toGLD(alfabeto, afdTransiciones, cantEstados, estadosFinales, estadoInicial, imprimir);
+        toGLD(alfabeto, afdTransiciones, cantEstados, estadosFinales, imprimir);
         // Implementar conversion a GLD
         break;
       case 3:
@@ -185,9 +186,8 @@ public class ER{
         int[][] afdTransiciones = getAFDTransiciones();
         int cantEstados = getCantEstados();
         int[] estadosFinales = getEstadosFinales();
-        int estadoInicial = 1;
         boolean imprimir = true;
-        toGLD(alfabeto, afdTransiciones, cantEstados, estadosFinales, estadoInicial, imprimir);
+        toGLD(alfabeto, afdTransiciones, cantEstados, estadosFinales, imprimir);
         break;
       default:
         System.out.println("Opcion no valida");
