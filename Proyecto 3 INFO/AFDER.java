@@ -30,16 +30,8 @@ class Node{
     return this.num;
   }
 
-  public void setNum(int num){
-    this.num = num;
-  }
-
   public String getRegex(){
     return this.regex;
-  }
-
-  public void SetRegex(String regex){
-    this.regex = regex;
   }
 
   public Node getOperador(){
@@ -48,6 +40,16 @@ class Node{
 
   public void setOperador(Node operador){
     this.operador = operador;
+  }
+
+  public boolean NoPapa(){
+    return this.operador == null;
+  }
+
+  public boolean NoHijos(Node nodo){
+    Node izq = nodo.getDerivado1();
+    Node der = nodo.getDerivado2();
+    return ((izq == null) && (der == null));
   }
 
   public Node getDerivado1(){
@@ -78,17 +80,10 @@ class Node{
     return this.firstPos;
   }
 
-  public void addFirst(int num){
-    this.firstPos.add(num);
-  }
-
   public HashSet<Integer> getlastPos(){
     return this.lastPos;
   }
 
-  public void addLast(int num){
-    this.lastPos.add(num);
-  }
 }
 
 public class AFDER{
@@ -98,9 +93,9 @@ public class AFDER{
   private static int[] regExpNum;
   private static int contRegExp;
 
-  private static HashSet<Integer> firstPos = new HashSet<Integer>();
-  private static HashSet<Integer> lastPos = new HashSet<Integer>();
-  private static HashMap<Integer, HashSet<Integer>> followPos = new HashMap<Integer, HashSet<Integer>>();
+  private static HashSet<Integer> firstPosREGEX = new HashSet<Integer>();
+  private static HashSet<Integer> lastPosREGEX = new HashSet<Integer>();
+  private static HashMap<Integer, HashSet<Integer>> followPosREGEX = new HashMap<Integer, HashSet<Integer>>();
 
 
   public static boolean inAlfabeto(char r){
@@ -225,8 +220,8 @@ public class AFDER{
 
   public static Node regex(String expresion, int num){
     Node regex0 = new Node(expresion,num);
-    regex0.addFirst(regex0.getNum());
-    regex0.addLast(regex0.getNum());
+    regex0.getfirstPos().add(regex0.getNum());
+    regex0.getlastPos().add(regex0.getNum());
     System.out.println(regex0.getRegex()+regex0.getfirstPos());
     System.out.println(regex0.getRegex()+regex0.getlastPos());
     return regex0;
@@ -271,12 +266,12 @@ public class AFDER{
           }else if(x=='.'){
             Node regex1 = silabas.remove(silabas.size()-1);
             Node regex2 = silabas.remove(silabas.size()-1);
-            silabas.add(concatOperador(regex1,regex2));
+            silabas.add(concatOperador(regex2,regex1));
             
           }else if(x=='|'){
             Node regex1 = silabas.remove(silabas.size()-1);
             Node regex2 = silabas.remove(silabas.size()-1);
-            silabas.add(orOperador(regex1,regex2));
+            silabas.add(orOperador(regex2,regex1));
           }
           operators.remove(operators.size()-1);
         }
@@ -292,12 +287,12 @@ public class AFDER{
           }else if(x=='.'){
             Node regex1 = silabas.remove(silabas.size()-1);
             Node regex2 = silabas.remove(silabas.size()-1);
-            silabas.add(concatOperador(regex1,regex2));
+            silabas.add(concatOperador(regex2,regex1));
 
           }else if(x=='|'){
             Node regex1 = silabas.remove(silabas.size()-1);
             Node regex2 = silabas.remove(silabas.size()-1);
-            silabas.add(orOperador(regex1,regex2));
+            silabas.add(orOperador(regex2,regex1));
           }
           operators.remove(operators.size()-1);
         }
@@ -313,12 +308,12 @@ public class AFDER{
       }else if(x=='.'){
         Node regex1 = silabas.remove(silabas.size()-1);
         Node regex2 = silabas.remove(silabas.size()-1);
-        silabas.add(concatOperador(regex1,regex2));
+        silabas.add(concatOperador(regex2,regex1));
   
       }else if(x=='|'){
         Node regex1 = silabas.remove(silabas.size()-1);
         Node regex2 = silabas.remove(silabas.size()-1);
-        silabas.add(orOperador(regex1,regex2));
+        silabas.add(orOperador(regex2,regex1));
       }
       operators.remove(operators.size()-1);
     }
@@ -379,7 +374,7 @@ public class AFDER{
 
     for(int m = 0; m < contRegExp; m++){
       regExpNum[m] = m + 1;
-      followPos.put(m+1, new HashSet<Integer>());
+      followPosREGEX.put(m+1, new HashSet<Integer>());
     }
 
     toStringList(regExpNum);
@@ -387,8 +382,91 @@ public class AFDER{
     return regExpNum;
   }
 
-  public static void fPlP(ArrayList<Node> nodos){
+  public static void fPlP(Node nodo){
     /*[. -> [#], [. -> [b], [. -> [b], [. -> [a], [* -> [| -> [b], [a]]]]]]] Recorrerlo al reves de hoja a root*/
+    try{
+
+      String regexNodo = nodo.getRegex();
+      char regexChar = regexNodo.charAt(0);
+      Node izq = nodo.getDerivado1();
+      Node der = nodo.getDerivado2();
+      System.out.println(nodo.NoPapa());
+      System.out.println(nodo.NoHijos(nodo));
+
+      if(izq != null || der != null){
+        fPlP(izq);
+        fPlP(der);
+
+        if(inAlfabeto(regexChar)){
+          nodo.setKleene(false);
+          nodo.getfirstPos().addAll(nodo.getfirstPos());
+          nodo.getlastPos().addAll(nodo.getlastPos());
+
+          /*System.out.println("FirstPos para " + nodo.getRegex() + ": " + toHashString(firstPos));
+          System.out.println("LastPos para " + nodo.getRegex() + ": " + toHashString(lastPos));*/
+
+        } else if(regexChar == '|'){
+
+          nodo.setKleene(izq.getKleene() || der.getKleene());
+
+          nodo.getfirstPos().addAll(izq.getfirstPos());
+          nodo.getfirstPos().addAll(der.getfirstPos());
+          
+          nodo.getlastPos().addAll(izq.getlastPos());
+          nodo.getlastPos().addAll(der.getlastPos());
+
+          /*System.out.println("FirstPos para " + nodo.getRegex() + ": " + toHashString(firstPos));
+          System.out.println("LastPos para " + nodo.getRegex() + ": " + toHashString(lastPos));*/
+
+        } else if(regexChar == '.'){
+
+          nodo.setKleene(izq.getKleene() && der.getKleene());
+
+          if(izq.getKleene()){
+            nodo.getfirstPos().addAll(izq.getfirstPos());
+            nodo.getfirstPos().addAll(der.getfirstPos());
+          } else {
+            nodo.getfirstPos().addAll(izq.getfirstPos());
+            
+          } 
+          
+          if(der.getKleene()){
+            nodo.getlastPos().addAll(izq.getlastPos());
+            nodo.getlastPos().addAll(der.getlastPos());
+          } else {
+            nodo.getlastPos().addAll(der.getlastPos());
+          }
+
+          /*System.out.println("FirstPos para " + nodo.getRegex() + ": " + toHashString(firstPos));
+          System.out.println("LastPos para " + nodo.getRegex() + ": " + toHashString(lastPos));*/
+
+        } else if(regexChar == '*'){
+
+          nodo.setKleene(true);
+          //izq.setKleene(true);
+          
+          nodo.getfirstPos().addAll(izq.getfirstPos());
+          nodo.getlastPos().addAll(izq.getlastPos());
+
+          /*System.out.println("FirstPos para " + nodo.getRegex() + ": " + toHashString(firstPos));
+          System.out.println("LastPos para " + nodo.getRegex() + ": " + toHashString(lastPos));*/
+        }
+
+      }
+      System.out.println("FirstPos para " + nodo.getRegex() + ": " + toHashString(nodo.getfirstPos()));
+      System.out.println("LastPos para " + nodo.getRegex() + ": " + toHashString(nodo.getlastPos()));
+      System.out.println("\n");
+      System.out.println("FirstPosREGEX final " + nodo.getRegex() + ": " + toHashString(firstPosREGEX));
+      System.out.println("LastPosREGEX final " + nodo.getRegex() + ": " + toHashString(lastPosREGEX));
+
+      if(nodo.NoPapa()){
+        firstPosREGEX.addAll(nodo.getfirstPos());
+        lastPosREGEX.addAll(nodo.getlastPos());
+      }
+      
+    } catch(NullPointerException e) {
+      /*Solo que siga, no interesa hacer lago con la excepion*/
+    }
   }
   
   public static String toHashString(HashSet<Integer> s){
@@ -439,7 +517,7 @@ public class AFDER{
     printN(test,0); 
     System.out.println("\n");
     System.out.println(nodesToString(test));
-    //fPlP(sintaxis(prueba), firstPos, lastPos);
+    fPlP(test);
   }
 
 }
