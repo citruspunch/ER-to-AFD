@@ -1,5 +1,4 @@
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
 
@@ -11,7 +10,7 @@ public class ER{
     regExp = er;
   }
 
-  public void toGLD(char[] alfabeto, int[][] afdTransiciones, int cantEstados, int[] estadosFinales, int estadoInicial, boolean archivo){
+  public ArrayList<String> toGLD(char[] alfabeto, int[][] afdTransiciones, int cantEstados, int[] estadosFinales, int estadoInicial, boolean archivo){
     int estadoError = 0;
     ArrayList<String> GLD = new ArrayList<String>();
 
@@ -47,6 +46,7 @@ public class ER{
     if (archivo){
       writeToFile(GLD);
     }
+    return GLD;
   }
 
   private boolean isFinal(int estado, int[] estadosFinales){
@@ -78,7 +78,7 @@ public class ER{
       if (isFinal(i, estadosFinales)) {
         piFinales.add(i);
       } else {
-        piNoFinales .add(i);
+        piNoFinales.add(i);
       }
     }
     pi.add(piNoFinales);
@@ -88,7 +88,7 @@ public class ER{
       siguiente = new ArrayList<ArrayList<Integer>>(pi);
       // Recorre cada subconjunto
       for (ArrayList<Integer> subconjunto : siguiente) {
-        Map<ArrayList<Integer>, ArrayList<Integer>> nuevosSubConjuntos = new HashMap<>();
+        HashMap<ArrayList<Integer>, ArrayList<Integer>> nuevosSubConjuntos = new HashMap<>();
         // Recorre cada estado del subconjunto
         for (int estado : subconjunto) {
           ArrayList<Integer> transitions = new ArrayList<>();
@@ -122,6 +122,37 @@ public class ER{
     return -1;
 }
 
+  public boolean parsingAFD(String cuerda, int[][] AFD, int[] estadosFinales){
+    int estadoInicial = 1;
+    int estadoActual = estadoInicial;
+    for (char c: cuerda.toCharArray()){
+      if (c != 'a' && c != 'b' && c != 'c'){
+        return false;
+      }
+      int cIndex = getCharIndex(c);
+      if (cIndex == -1){
+        return false;
+      }
+      estadoActual = AFD[cIndex][estadoActual];
+    }
+    if (isFinal(estadoActual, estadosFinales)){
+      return true;
+    } 
+    return false;
+  }
+
+  private int getCharIndex(char c){
+    switch (c){
+      case 'a':
+        return 0;
+      case 'b':
+        return 1;
+      case 'c':
+        return 2;
+      default:
+        return -1; // Error
+    }
+  }
   public static void main(String args[]) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
     
@@ -134,7 +165,6 @@ public class ER{
     System.out.println("2. GLD");
     System.out.println("3. Ambos");
     int opcion = Integer.parseInt(teclado.readLine());
-    ER er = new ER(re);
     switch (opcion) {
       case 1:
         // Implementar conversion a AFD
