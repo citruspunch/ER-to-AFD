@@ -72,7 +72,7 @@ public class ER{
         }
       }
       writer.write(System.lineSeparator());
-      writer.write("a, b, c" + System.lineSeparator());
+      writer.write("a, b, c" + System.lineSeparator()); 
       for (String str : GLD) {
         writer.write(str + System.lineSeparator());
       }
@@ -82,7 +82,7 @@ public class ER{
     }
   }
 
-  public void minimizarAFD(int[][] afdTransiciones, char[] alfabeto, int cantEstados, int[] estadosFinales){
+  public void minimizarAFD(int[][] afdTransiciones, char[] alfabeto, int cantEstados, int[] estadosFinales, boolean archivo){
     ArrayList<ArrayList<Integer>> pi = new ArrayList<ArrayList<Integer>>();
     ArrayList<Integer> piNoFinales = new ArrayList<>();
     ArrayList<Integer> piFinales  = new ArrayList<>();
@@ -123,8 +123,76 @@ public class ER{
         break;
       }
     }
+
+    int cantEstadosNuevos = pi.size();
+
+    int[][] transicionesMinimizadas = new int[alfabeto.length][pi.size()];
+
+    for (int i = 0; i < pi.size(); i++) {
+      // Como todas las transiciones son iguales, se toma el primer estado del subconjunto
+      int estado = pi.get(i).get(0);
+      
+      for (int j = 0; j < alfabeto.length; j++) {
+        int transicion = afdTransiciones[j][estado];
+        // Estado al que corresponde la transición
+        int nuevoEstado = encontrarConjunto(pi, transicion);
+        // Guarda la transición en el nuevo AFD
+        transicionesMinimizadas[j][i] = nuevoEstado;
+      }
+    }
+
+    ArrayList<Integer> estadosFinalesNuevosA = new ArrayList<>();
+    for (int i = 0; i < pi.size(); i++) {
+      // Como todas las transiciones son iguales, se toma el primer estado del subconjunto
+      int estado = pi.get(i).get(0);
+      
+      if (isFinal(estado, estadosFinales)) {
+        estadosFinalesNuevosA.add(i);
+      }
+    }
+    int[] estadosFinalesNuevos = new int[estadosFinalesNuevosA.size()];
+    for (int i = 0; i < estadosFinalesNuevos.length; i++) {
+      estadosFinalesNuevos[i] = estadosFinalesNuevosA.get(i);
+    }
+
+
+    if (archivo){
+      genArchivoMinimizacion(transicionesMinimizadas, cantEstadosNuevos, alfabeto, estadosFinalesNuevos);
+    }
   }
 
+  private void genArchivoMinimizacion(int[][] transicionesMinimizadas, int cantEstados, char[] alfabeto, int[] estadosFinales) {
+    try {
+      FileWriter writer = new FileWriter("AFDmin.txt");
+      for (int i = 0; i < alfabeto.length; i++) {
+        writer.write(alfabeto[i]);
+        if (i < alfabeto.length - 1) {
+          writer.write(", ");
+        }
+      }
+      writer.write(System.lineSeparator());
+      writer.write(cantEstados + System.lineSeparator());
+      for (int i = 0; i < estadosFinales.length; i++) {
+        writer.write(estadosFinales[i]);
+        if (i < estadosFinales.length - 1) {
+          writer.write(", ");
+        }
+      }
+      writer.write(System.lineSeparator());
+      for (int fila = 0; fila < alfabeto.length; fila++) {
+        for (int col = 0; col < transicionesMinimizadas[fila].length; col++) {
+          writer.write(transicionesMinimizadas[fila][col]);
+          if (col < transicionesMinimizadas[fila].length - 1) {
+            writer.write(", ");
+          }
+        }
+        writer.write(System.lineSeparator());
+      }
+      writer.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
   private int encontrarConjunto(ArrayList<ArrayList<Integer>> conjunto, int estado) {
     for (int i = 0; i < conjunto.size(); i++) {
       if (conjunto.get(i).contains(estado)) {
