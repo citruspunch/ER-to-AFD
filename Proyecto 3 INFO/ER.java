@@ -5,8 +5,8 @@ import java.util.*;
 public class ER{
 
   private static String regExp;
-  public static final int estadoError = 0;
-  public static final int estadoInicial = 1;
+  public static final int ESTADOERROR = 0;
+  public static final int ESTADOINICIAL = 1;
 
   public ER(String er){
     regExp = er;
@@ -19,9 +19,9 @@ public class ER{
     char[] noTerminales = new char[cantEstados];
 
     for (int i = 1; i <= cantEstados; i++) {
-      if (i == estadoError){
+      if (i == ESTADOERROR){
         noTerminales[i] = (char) ('A');
-      } else if(i == estadoInicial){
+      } else if(i == ESTADOINICIAL){
         noTerminales[i] = 'S';
       } else if(!((char) ('A' + i) == 'S')){
         noTerminales[i] = (char) ('A' + i);
@@ -32,9 +32,9 @@ public class ER{
 
     for (int col=0; col<cantEstados; col++){
       for (int row=0; row<alfabeto.length; row++){
-        if (col == estadoError){
-          GLD.add(noTerminales[col] + " -> " + alfabeto[row] + noTerminales[estadoError]);
-        } else if (col == estadoInicial){
+        if (col == ESTADOERROR){
+          GLD.add(noTerminales[col] + " -> " + alfabeto[row] + noTerminales[ESTADOERROR]);
+        } else if (col == ESTADOINICIAL){
           GLD.add(noTerminales[col] + " -> " + alfabeto[row] + noTerminales[afdTransiciones[row][col]]);
         } else {
           boolean estadoFinal = isFinal(col, estadosFinales);
@@ -161,6 +161,15 @@ public class ER{
     }
   }
 
+  private int encontrarConjunto(ArrayList<ArrayList<Integer>> conjunto, int estado) {
+    for (int i = 0; i < conjunto.size(); i++) {
+      if (conjunto.get(i).contains(estado)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
   private void genArchivoMinimizacion(int[][] transicionesMinimizadas, int cantEstados, char[] alfabeto, int[] estadosFinales) {
     try {
       FileWriter writer = new FileWriter("AFDmin.txt");
@@ -193,17 +202,9 @@ public class ER{
       e.printStackTrace();
     }
   }
-  private int encontrarConjunto(ArrayList<ArrayList<Integer>> conjunto, int estado) {
-    for (int i = 0; i < conjunto.size(); i++) {
-      if (conjunto.get(i).contains(estado)) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
+  
   public boolean parsingAFD(String cuerda, int[][] AFD, int[] estadosFinales){
-    int estadoActual = estadoInicial;
+    int estadoActual = ESTADOINICIAL;
     for (char c: cuerda.toCharArray()){
       if (c != 'a' && c != 'b' && c != 'c'){
         return false;
