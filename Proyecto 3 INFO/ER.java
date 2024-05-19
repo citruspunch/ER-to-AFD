@@ -47,7 +47,7 @@ public class ER{
       }
     }
     if (archivo){
-      writeToFile(GLD);
+      genArchivoGLD(GLD, noTerminales);
     }
     return GLD;
   }
@@ -61,9 +61,18 @@ public class ER{
     return false;
   }
 
-  private void writeToFile(ArrayList<String> GLD) {
+  private void genArchivoGLD(ArrayList<String> GLD, char[] simbolosNT) {
     try {
       FileWriter writer = new FileWriter("GLD.gld");
+
+      for (int i = 0; i < simbolosNT.length; i++) {
+        writer.write(simbolosNT[i]);
+        if (i < simbolosNT.length - 1) {
+          writer.write(", ");
+        }
+      }
+      writer.write(System.lineSeparator());
+      writer.write("a, b, c" + System.lineSeparator());
       for (String str : GLD) {
         writer.write(str + System.lineSeparator());
       }
