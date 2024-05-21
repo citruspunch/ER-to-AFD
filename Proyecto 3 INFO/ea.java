@@ -6,7 +6,7 @@ class lP{
   
   protected Character regex;
   protected boolean kleene,or,concat,er;
-  protected ArrayList<Integer> posLetraActual, posLetraNext;
+  protected ArrayList<Integer> posLetraActual;
   protected ArrayList<lP> op1, op2;
   protected int num;
   protected lP letraAnt, letraNext;
@@ -25,9 +25,7 @@ class lP{
   public lP(char regex, int num){
     this(regex);
     posLetraActual = new ArrayList<Integer>();
-    posLetraNext = new ArrayList<Integer>();
     this.posLetraActual.add(num);
-    this.posLetraNext.add(num);
     this.er = true;
   }
 
@@ -72,8 +70,16 @@ class lP{
     this.op1.add(letra1);
   }
 
+  public lP devolverLetra1(int num){
+    return this.op1.get(num);
+  }
+
   public void addLetra2(lP letra2){
     this.op2.add(letra2);
+  }
+
+  public lP devolverLetra2(int num){
+    return this.op2.get(num);
   }
 
   
@@ -83,7 +89,7 @@ class lP{
       oStr.append("{ "+this.getRegex() + " -> "+  this.op1.toString() + ", "+ this.op2 +" }");
       return oStr.toString();
     } else {
-      oStr.append("{ "+this.getRegex() + " -> "+  this.posLetraActual.toString() + ", "+ this.posLetraNext +" }");
+      oStr.append("{ "+this.getRegex() + " -> "+  this.posLetraActual.toString() +" }");
       return oStr.toString();
     }
   }
@@ -203,7 +209,7 @@ public class ea{
     return extendedRE.toString();
   }
 
-  //Este metodo hace un arraylist de objetos lP los cuales representan a los caracterres de la expresion regular junto a su posicion asocidada, basicamente sirve para tener un orden en la expresion regular.
+  //Este metodo hace un arraylist de objetos lP los cuales representan a los caracterres de la expresion regular junto a su posicion asocidada, basicamente sirve para tener un orden en la expresion regular. 
 
   public static ArrayList<lP> auxPosiciones(String regex){
     
@@ -236,61 +242,22 @@ public class ea{
         posAux.add(operadorActual);
       }
     }
-    System.out.println("Positions: ");
+    /*System.out.println("Positions: ");
     System.out.println(posAux.toString());
-    System.out.println("\n");
+    System.out.println("\n");*/
     return posAux;
-  }
-
-  public static ArrayList<lP> punterosLetras(ArrayList<lP> auxPosiciones){
-  //Este metodo va inmediatamente despues de auxPosiciones pues recibe el resultado de este, ahora con el arrayList de auxPosiciones que nos da en orden la expresion regular, podemos separar cada tipo de objeto lP, letras y operadores.
-
-    ArrayList<lP> letras = new ArrayList<lP>();
-    
-    for(int k = 0; k<auxPosiciones.size(); k++){
-      lP actual = auxPosiciones.get(k);
-//-------------------------------------------------------------------------
-//metemos las letras a el Array letras
-      if(inAlfabeto(actual.getRegex())){
-        letras.add(actual);
-      } 
-    } 
-
-    System.out.println("letras: ");
-    System.out.println(letras.toString());
-    System.out.println("\n");
-  
-    return letras;
-  }
-
-  public static ArrayList<lP> punterosOps(ArrayList<lP> auxPosiciones){
-//Continuacion de punterosLetras, este solo toma los operadores.
-
-    ArrayList<lP> ops = new ArrayList<lP>();
-
-    for(int k = 0; k<auxPosiciones.size(); k++){
-      lP actual = auxPosiciones.get(k);
-//-------------------------------------------------------------------------
-//metemos los operadores al array de operadores
-      if(inOps(actual.getRegex())){
-        ops.add(actual);
-      }
-    } 
-  
-    System.out.println("\n");
-    System.out.println("ops: ");
-    System.out.println(ops.toString());
-    return ops;
   }
   
   /*funcion: 
 [{ . -> [{ . -> [{ . -> [{ a -> [1], [1] }], [{ b -> [2], [2] }] }], [{ a -> [3], [3] }] }], [{ # -> [4], [4] }] }]*/
 
   public static ArrayList<lP> relacionesParentesis(ArrayList<lP> auxPosiciones){
+  /*Esta funcion sirve para evaluar las expresiones dentro de parentesis, basicamente va agregando a un array las posiciones donde encuentre paréntesis y cuando estos se cierren crea un array auxiliar para meter los objetos del array original que estaban en parentesis a el array auxiliar, luego llamamos a ka funcion relacionesSINparentesis que es el mismo caso de esta funcion pero para expresiones que no llevan parentesis, se procesa y se mete a un nuevo array luego la expresion ya procesada se mete de nuevo en el array original y se continua el ciclo hasta que ya no hayan mas exoresiones en oarentesis por evaluar*/
     
     ArrayList<lP> funcion = new ArrayList<lP>(auxPosiciones);
     ArrayList<Integer> start = new ArrayList<Integer>();
     ArrayList<Integer> end = new ArrayList<Integer>();
+    boolean falta = false;
     /*  */
 
     for(int a = 0; a<funcion.size(); a++){
@@ -301,7 +268,7 @@ public class ea{
       } else if( opActPar.getRegex() == ')'){
         end.add(a);
         //funcion.remove(a);
-        if(!start.isEmpty() && !end.isEmpty()){
+        if(!start.isEmpty() /*&& !end.isEmpty()*/){
           ArrayList<lP> auxAux = new ArrayList<lP>();
           int starte = start.remove(start.size()-1);
           int ende = end.remove(end.size()-1);
@@ -309,32 +276,44 @@ public class ea{
           for(int i = starte +1 ; i< ende; i=i+1){
             auxAux.add(funcion.get(i));
           }
-          System.out.println("auxAux: "+auxAux.toString());
+          //System.out.println("auxAux: "+auxAux.toString());
           
           ArrayList<lP> auxFuncion = relacionesSINparentesis(auxAux);
           
-          System.out.println("AuxF: "+auxFuncion.toString());
+          //System.out.println("AuxF: "+auxFuncion.toString());
           
           for(int o = ende; o>starte -1; o--){
             funcion.remove(o);
           }
-          System.out.println("funcion1: "+funcion.toString());
+          //System.out.println("funcion1: "+funcion.toString());
 
           for(int g = 0; g<auxFuncion.size(); g++){
             funcion.add(starte , auxFuncion.get(g));
           }
-          System.out.println("funcionAdd: "+funcion.toString());
+          /*System.out.println("funcionAdd: "+funcion.toString());
           System.out.println(starte + "" );
           System.out.println(ende + "" );
-          System.out.print("recur");
+          System.out.print("recur");*/
           a = starte + auxFuncion.size();
         }
+      } 
+    }
+    for(int k = 0; k<funcion.size(); k++){
+      lP act = funcion.get(k);
+      if(act.getRegex() == ')' || act.getRegex()=='('){
+        falta = true;
+        break;
       }
     }
-    return funcion;
+    if(falta){
+      return relacionesParentesis(funcion);
+    } else {
+      return funcion;
+    }
   }
 
   public static ArrayList<lP> relacionesSINparentesis(ArrayList<lP> auxPosiciones){
+  /*Esta funcion crea las relaciones entre operadores y letras, es decir, el propópsito de esta funcion es determinar a que cosas afecta cierto operador, por ejemplo a|b esta funcion nos dice a que operandos esta afectando el operador or, en este caso a,b y el resultado de eso lo devuelve como un array, utilizamos 3 fors para recorrer la expresion y haciendo las operaciones requeridas, el primer for se encarga de hacer la relacion para los operadores kleene, el segundo for para los operadores concatenacion y el tercero para los operadores or y en dichos fors se evalua cada caso posible*/
     
     ArrayList<lP> funcion = new ArrayList<lP>(auxPosiciones);
     
@@ -428,26 +407,105 @@ public class ea{
         }
       }
     }
-    System.out.println("\n");
+    /*System.out.println("\n");
     System.out.println("funcion: ");
-    System.out.println(funcion.toString());
+    System.out.println(funcion.toString());*/
     return funcion;
   }
 
   public static ArrayList<lP> relaciones(ArrayList<lP> auxPosiciones){
+  /*esta ya es la implementacion de los dos metodos anteriores para crear un array definitivo*/
     ArrayList<lP> sinpar = relacionesParentesis(auxPosiciones);
     ArrayList<lP> fin = relacionesSINparentesis(sinpar);
     return fin;
   }
 
-  
-  public static String toHashString(HashMap<lP,ArrayList<lP>> vaina){
-    StringBuilder str = new StringBuilder();
-    str.append("{ ");
+  public static ArrayList<Integer> firstPos(ArrayList<lP> fin){
+    /*Una vez obtenido el array definitivo con las funciones anteriores hacemos un for para recorrer a todos los elementos de este y en cada iteracion iremos evaluando lo siguiente, si estamos en una concatenacion su primera posicion será lo que tenga a la izquierda siempre y cuando esta expresion no sea un operador, si lo es, metemos ese operador al array posiblefirstPos y llamamos recursivamente a firstPos() con el array de posibles. Luego para los ors operamos de manera similar, si a sus lados tiene solo letras estas seran posibles posiciones, si no, de nuevo metemos el operador a el array de posibles y hacemos recursividad con este, ahora para el caso de kleene, este en el 99% de los casos estara metido entre una concatenacion por lo que lo evaluamos dentro de los ifs de las concatenaciones diciendo que si la concatenacion tiene un kleene en su lado izquierdo debemos agregar a firstPos el lado izquiero y derecho de la expresion por aquello que kleene puede ser lambda, de lo contrario hacemos el if especifico de kleene y agreamos su posicion correspondiente a firstpos*/
     
-    str.append(" }");
-    return str.toString();
+    ArrayList<lP> posiblefirstPos = new ArrayList<lP>();
+    ArrayList<Integer> firstPosA = new ArrayList<Integer>();
+    
+    for(int a = 0; a<fin.size(); a++){
+      lP analisis = fin.get(a);
+      if(analisis.getRegex() == '.'){
+        lP letra1 = analisis.devolverLetra1(0);
+        lP letra2 = analisis.devolverLetra2(0);
+        
+        if(inAlfabeto(letra1.getRegex()) ){
+          firstPosA.add( letra1.posLetraActual.get(0) );
+          
+        } else if(inAlfabeto(letra1.getRegex()) && inOps(letra2.getRegex()) ){
+          firstPosA.add( letra1.posLetraActual.get(0) );
+          
+        } else if( inOps(letra1.getRegex())  ){
+          if(letra1.getRegex() == '*'){
+            
+            if(inAlfabeto(letra2.getRegex())){
+              firstPosA.add( letra2.posLetraActual.get(0) );
+              posiblefirstPos.add(letra1);
+              firstPosA.addAll(firstPos(posiblefirstPos));
+              
+            } else if(inOps(letra2.getRegex())){
+              posiblefirstPos.add(letra1);
+              posiblefirstPos.add(letra2);
+              firstPosA.addAll(firstPos(posiblefirstPos));
+            }
+          } else {
+            posiblefirstPos.add(letra1);
+            firstPosA.addAll(firstPos(posiblefirstPos));
+          }
+        }
+        
+      } else if(analisis.getRegex() == '|'){
+        lP letra1 = analisis.devolverLetra1(0);
+        lP letra2 = analisis.devolverLetra2(0);
+
+        if( inAlfabeto(letra1.getRegex()) && inAlfabeto(letra2.getRegex()) ){
+          firstPosA.add( letra1.posLetraActual.get(0) );
+          firstPosA.add( letra2.posLetraActual.get(0) );
+          
+        } else if( inAlfabeto(letra1.getRegex()) && inOps(letra2.getRegex()) ){
+          firstPosA.add( letra1.posLetraActual.get(0) );
+          posiblefirstPos.add(letra2);
+          firstPosA.addAll(firstPos(posiblefirstPos));
+          
+        } else if( inOps(letra1.getRegex()) && inAlfabeto(letra2.getRegex()) ){
+          posiblefirstPos.add(letra1);
+          firstPosA.addAll(firstPos(posiblefirstPos));
+          firstPosA.add( letra2.posLetraActual.get(0) );
+        } else if( inOps(letra1.getRegex()) && inOps(letra2.getRegex()) ){
+          posiblefirstPos.add(letra1);
+          posiblefirstPos.add(letra2);
+          firstPosA.addAll(firstPos(posiblefirstPos));
+        }
+        
+      } else if(analisis.getRegex() == '*'){
+        lP letra1 = analisis.devolverLetra1(0);
+        if(inAlfabeto(letra1.getRegex())){
+          firstPosA.add( letra1.posLetraActual.get(0) );
+        } else if( inOps(letra1.getRegex()) ){
+          posiblefirstPos.add(letra1);
+          firstPosA.addAll(firstPos(posiblefirstPos));
+        }
+      }
+      
+    }
+//Quitamos posiciones que se hayan agregado repetidas
+    HashSet<Integer> transitorio = new HashSet<Integer>();
+    for(int q=0; q<firstPosA.size(); q++){
+      transitorio.add(firstPosA.remove(q));
+      q--;
+    }
+
+    firstPosA.addAll(transitorio);
+    
+    System.out.println(posiblefirstPos.toString());
+    System.out.println(firstPosA.toString());
+    return firstPosA; 
   }
+
+
 
 
   public static void main(String[] args) throws Exception{
@@ -456,9 +514,7 @@ public class ea{
     String prueba = teclado.readLine();
     System.out.println(extendRE(prueba));
     auxPosiciones(extendRE(prueba));
-    //punterosLetras(auxPosiciones(extendRE(prueba)));
-    //punterosOps(auxPosiciones(extendRE(prueba)));
-    relaciones(auxPosiciones(extendRE(prueba)));
+    firstPos(relaciones(auxPosiciones(extendRE(prueba))));
   }
   
 }
