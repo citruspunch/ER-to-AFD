@@ -2,14 +2,13 @@ import java.util.*;
 import java.io.*;
 
 class lP{
-  //Esta clase es un apoyo, sirve para distinguir con que caracter de la expresion regular estamos tratando, si se trata de una letra, "a", o un operador, "*" .
+  //Esta clase es un apoyo, sirve para distinguir con que caracter de la expresion regular estamos tratando, si se trata de una letra, "a", o un operador, "*" y asi poder asignarle una posicion concreta y estática a cada letra para que en el resto de métodos siempre tengamos consistencia con las posiciones.
   
   protected Character regex;
   protected boolean kleene,or,concat,er;
-  protected ArrayList<Integer> posLetraActual;
+  protected ArrayList<Integer> posLetraActual, posLetraNext, posFP;
   protected ArrayList<lP> op1, op2;
   protected int num;
-  protected lP letraAnt, letraNext;
 
   //contructor general usando principalmente para los operadores.
   public lP(char regex){
@@ -17,14 +16,17 @@ class lP{
     this.kleene = false;
     this.or = false;
     this.concat = false;
-    op1 = new  ArrayList<lP>();
-    op2 = new  ArrayList<lP>();
+    this.op1 = new  ArrayList<lP>();
+    this.op2 = new  ArrayList<lP>();
+    this.posFP = new ArrayList<Integer>();
+    
   }
   
  //Constructor sobrecargado para las letas
   public lP(char regex, int num){
     this(regex);
-    posLetraActual = new ArrayList<Integer>();
+    this.posLetraActual = new ArrayList<Integer>();
+    this.posLetraNext = new ArrayList<Integer>();
     this.posLetraActual.add(num);
     this.er = true;
   }
@@ -407,9 +409,9 @@ public class ea{
         }
       }
     }
-    /*System.out.println("\n");
+    System.out.println("\n");
     System.out.println("funcion: ");
-    System.out.println(funcion.toString());*/
+    System.out.println(funcion.toString());
     return funcion;
   }
 
@@ -428,7 +430,7 @@ public class ea{
     
     for(int a = 0; a<fin.size(); a++){
       lP analisis = fin.get(a);
-      if(analisis.getRegex() == '.'){
+      if(analisis.getConcat()){
         lP letra1 = analisis.devolverLetra1(0);
         lP letra2 = analisis.devolverLetra2(0);
         
@@ -439,7 +441,7 @@ public class ea{
           firstPosA.add( letra1.posLetraActual.get(0) );
           
         } else if( inOps(letra1.getRegex())  ){
-          if(letra1.getRegex() == '*'){
+          if(letra1.getKleene()){
             
             if(inAlfabeto(letra2.getRegex())){
               firstPosA.add( letra2.posLetraActual.get(0) );
@@ -457,7 +459,7 @@ public class ea{
           }
         }
         
-      } else if(analisis.getRegex() == '|'){
+      } else if(analisis.getOr()){
         lP letra1 = analisis.devolverLetra1(0);
         lP letra2 = analisis.devolverLetra2(0);
 
@@ -480,7 +482,7 @@ public class ea{
           firstPosA.addAll(firstPos(posiblefirstPos));
         }
         
-      } else if(analisis.getRegex() == '*'){
+      } else if(analisis.getKleene()){
         lP letra1 = analisis.devolverLetra1(0);
         if(inAlfabeto(letra1.getRegex())){
           firstPosA.add( letra1.posLetraActual.get(0) );
@@ -504,6 +506,73 @@ public class ea{
     System.out.println(firstPosA.toString());
     return firstPosA; 
   }
+  
+
+  public static ArrayList<Integer> casoBasefollowPos(ArrayList<lP> fin, ArrayList<Integer> casoBaseFP){
+    /*ArrayList<lP> iteraciones = new ArrayList<lP>();*/
+    
+    for(int h = 0; h<fin.size(); h++){
+      lP analisis = fin.get(h);
+      if(analisis.getConcat()){
+        
+        lP letra1 = analisis.devolverLetra1(0);
+        lP letra2 = analisis.devolverLetra2(0);
+        
+        if(inAlfabeto(letra1.getRegex()) && inAlfabeto(letra2.getRegex()) ){
+          letra1.posLetraNext.addAll(letra2.posLetraActual);
+          casoBaseFP.addAll(letra2.posLetraActual);
+          System.out.println("posBase: "+letra1.posLetraActual.get(0)+letra1.getRegex()+"->" +letra2.getRegex()+casoBaseFP.toString());
+          System.out.println("FP:"+letra2.getRegex()+casoBaseFP.toString());
+          
+        } else if(inOps(letra1.getRegex()) && inAlfabeto(letra2.getRegex())){
+          ArrayList<lP> recursion =  new ArrayList<lP>();
+          recursion.add(letra1);
+          letra1.posFP.addAll(casoBasefollowPos(recursion,casoBaseFP));
+          
+          casoBaseFP.addAll(letra2.posLetraActual);
+          
+          System.out.println("posRecur1: "+letra1.getRegex()+letra1.posFP.toString());
+          System.out.println("posRecur: "+letra2.getRegex()+analisis.posFP.toString());
+        }
+        
+      } else if(analisis.getOr()){
+        lP letra1 = analisis.devolverLetra1(0);
+        lP letra2 = analisis.devolverLetra2(0);
+        if(inAlfabeto(letra1.getRegex()) && inAlfabeto(letra2.getRegex()) ){
+          analisis.posFP.add(letra1.posLetraActual.get(0));
+          analisis.posFP.add(letra2.posLetraActual.get(0));
+          
+        } else if( inOps(letra1.getRegex()) && inOps(letra2.getRegex()) ){
+          ArrayList<lP> recursion = new ArrayList<lP>();
+          recursion.add(letra1);
+          letra1.posFP.addAll(casoBasefollowPos(recursion,casoBaseFP));
+          recursion.remove(0);
+          recursion.add(letra2);
+          letra2.posFP.addAll(casoBasefollowPos(recursion,casoBaseFP));
+          recursion.remove(0);
+          recursion.add(letra1);
+          recursion.add(letra2);
+          analisis.posFP.addAll(casoBasefollowPos(recursion,casoBaseFP));
+          
+        }
+      
+      } else if(analisis.getKleene()){
+        lP letra1 = analisis.devolverLetra1(0);
+        if( inAlfabeto(letra1.getRegex()) ){
+          analisis.posFP.add(letra1.posLetraActual.get(0));
+          casoBaseFP.addAll(letra1.posLetraActual);
+        } else if(inOps(letra1.getRegex())){
+          ArrayList<lP> recursion = new ArrayList<lP>();
+          recursion.add(letra1);
+          letra1.posFP.addAll(casoBasefollowPos(recursion,casoBaseFP));
+          analisis.posFP.addAll(letra1.posFP);
+          casoBaseFP.addAll(analisis.posFP);
+        }
+      }
+    }
+    System.out.println("ArrayFinal:"+casoBaseFP.toString());
+    return casoBaseFP;
+  }
 
 
 
@@ -515,6 +584,8 @@ public class ea{
     System.out.println(extendRE(prueba));
     auxPosiciones(extendRE(prueba));
     firstPos(relaciones(auxPosiciones(extendRE(prueba))));
+    ArrayList<Integer> fp = new ArrayList<Integer>();
+    casoBasefollowPos( relaciones(auxPosiciones(extendRE(prueba))), fp);
   }
   
 }
