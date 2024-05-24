@@ -16,10 +16,10 @@ class lP{
     this.kleene = false;
     this.or = false;
     this.concat = false;
-    this.op1 = new  ArrayList<lP>();
-    this.op2 = new  ArrayList<lP>();
-    this.posFP = new ArrayList<Integer>();
-    
+    this.op1 = new ArrayList<lP>();
+    this.op2 = new ArrayList<lP>();
+    this.posLetraActual = new ArrayList<Integer>();
+    this.posLetraNext = new ArrayList<Integer>();
   }
   
  //Constructor sobrecargado para las letas
@@ -28,7 +28,9 @@ class lP{
     this.posLetraActual = new ArrayList<Integer>();
     this.posLetraNext = new ArrayList<Integer>();
     this.posLetraActual.add(num);
+    this.posLetraNext.add(num);
     this.er = true;
+    
   }
 
   //Getters y setters 
@@ -60,14 +62,6 @@ class lP{
     this.concat = concat;
   }
 
-  public ArrayList<lP> getOp1(){
-    return this.op1;
-  }
-
-  public ArrayList<lP> getOp2(){
-    return this.op2;
-  }
-
   public void addLetra1(lP letra1){
     this.op1.add(letra1);
   }
@@ -88,10 +82,10 @@ class lP{
   public String toString(){
     StringBuilder oStr = new StringBuilder();
     if(this.getRegex() == '*' || this.getRegex()=='.' || this.getRegex()== '+' || this.getRegex()== '|' || this.getRegex()== ')' || this.getRegex()== '(' ){
-      oStr.append("{ "+this.getRegex() + " -> "+  this.op1.toString() + ", "+ this.op2 +" }");
+      oStr.append("{ "+this.getRegex() + " -> "+  this.op1.toString() + ", "+ this.op2.toString()+ "posAnt: "+this.posLetraActual+","+"letraNxt:"+this.posLetraNext+" }");
       return oStr.toString();
     } else {
-      oStr.append("{ "+this.getRegex() + " -> "+  this.posLetraActual.toString() +" }");
+      oStr.append("{ "+this.getRegex() + " -> "+  this.posLetraActual.toString()+","+this.posLetraNext +" }");
       return oStr.toString();
     }
   }
@@ -123,6 +117,20 @@ public class ea{
       }
       return false;
     }
+
+  public static void test(){
+    //lo hice solo para saber si un addAll sobreescribia las cosas de un array o no
+    ArrayList<Integer> test = new ArrayList<Integer>();
+    test.add(1);
+    test.add(2);
+    System.out.println("test1:"+test.toString());
+    ArrayList<Integer> test2 = new ArrayList<Integer>();
+    test2.add(3);
+    test2.add(4);
+    System.out.println("test2:"+test2.toString());
+    test.addAll(test2);
+    System.out.println("testFinal:"+test.toString());
+  }
 
   public static String extendRE(String re){
 //Se encarga de agregar el caracter # donde debe finalizar la expresion regular, asi como agregar un "." donde hay concatenaciones y cambiar la clausura positiva + a una expresion de la forma a.a* .
@@ -211,9 +219,8 @@ public class ea{
     return extendedRE.toString();
   }
 
-  //Este metodo hace un arraylist de objetos lP los cuales representan a los caracterres de la expresion regular junto a su posicion asocidada, basicamente sirve para tener un orden en la expresion regular. 
-
   public static ArrayList<lP> auxPosiciones(String regex){
+    //Este metodo hace un arraylist de objetos lP los cuales representan a los caracterres de la expresion regular junto a su posicion asocidada, basicamente sirve para tener un orden en la expresion regular y que las posiciones de cada letra no se pierdan sino que se queden adheridas a cada letra siempre. 
     
     ArrayList<lP> posAux = new ArrayList<lP>();
     int positionen = 1;
@@ -502,80 +509,173 @@ public class ea{
 
     firstPosA.addAll(transitorio);
     
-    System.out.println(posiblefirstPos.toString());
+    /*System.out.println(posiblefirstPos.toString());*/
     System.out.println(firstPosA.toString());
     return firstPosA; 
   }
-  
 
-  public static ArrayList<Integer> casoBasefollowPos(ArrayList<lP> fin, ArrayList<Integer> casoBaseFP){
-    /*ArrayList<lP> iteraciones = new ArrayList<lP>();*/
-    
-    for(int h = 0; h<fin.size(); h++){
-      lP analisis = fin.get(h);
-      if(analisis.getConcat()){
-        
-        lP letra1 = analisis.devolverLetra1(0);
-        lP letra2 = analisis.devolverLetra2(0);
-        
-        if(inAlfabeto(letra1.getRegex()) && inAlfabeto(letra2.getRegex()) ){
-          letra1.posLetraNext.addAll(letra2.posLetraActual);
-          casoBaseFP.addAll(letra2.posLetraActual);
-          System.out.println("posBase: "+letra1.posLetraActual.get(0)+letra1.getRegex()+"->" +letra2.getRegex()+casoBaseFP.toString());
-          System.out.println("FP:"+letra2.getRegex()+casoBaseFP.toString());
-          
-        } else if(inOps(letra1.getRegex()) && inAlfabeto(letra2.getRegex())){
-          ArrayList<lP> recursion =  new ArrayList<lP>();
-          recursion.add(letra1);
-          letra1.posFP.addAll(casoBasefollowPos(recursion,casoBaseFP));
-          
-          casoBaseFP.addAll(letra2.posLetraActual);
-          
-          System.out.println("posRecur1: "+letra1.getRegex()+letra1.posFP.toString());
-          System.out.println("posRecur: "+letra2.getRegex()+analisis.posFP.toString());
-        }
-        
-      } else if(analisis.getOr()){
-        lP letra1 = analisis.devolverLetra1(0);
-        lP letra2 = analisis.devolverLetra2(0);
-        if(inAlfabeto(letra1.getRegex()) && inAlfabeto(letra2.getRegex()) ){
-          analisis.posFP.add(letra1.posLetraActual.get(0));
-          analisis.posFP.add(letra2.posLetraActual.get(0));
-          
-        } else if( inOps(letra1.getRegex()) && inOps(letra2.getRegex()) ){
-          ArrayList<lP> recursion = new ArrayList<lP>();
-          recursion.add(letra1);
-          letra1.posFP.addAll(casoBasefollowPos(recursion,casoBaseFP));
-          recursion.remove(0);
-          recursion.add(letra2);
-          letra2.posFP.addAll(casoBasefollowPos(recursion,casoBaseFP));
-          recursion.remove(0);
-          recursion.add(letra1);
-          recursion.add(letra2);
-          analisis.posFP.addAll(casoBasefollowPos(recursion,casoBaseFP));
-          
-        }
-      
-      } else if(analisis.getKleene()){
-        lP letra1 = analisis.devolverLetra1(0);
-        if( inAlfabeto(letra1.getRegex()) ){
-          analisis.posFP.add(letra1.posLetraActual.get(0));
-          casoBaseFP.addAll(letra1.posLetraActual);
-        } else if(inOps(letra1.getRegex())){
-          ArrayList<lP> recursion = new ArrayList<lP>();
-          recursion.add(letra1);
-          letra1.posFP.addAll(casoBasefollowPos(recursion,casoBaseFP));
-          analisis.posFP.addAll(letra1.posFP);
-          casoBaseFP.addAll(analisis.posFP);
-        }
-      }
+  public static lP numAletra(ArrayList<lP> array, int num){
+  /*El proposito de esta funcion es saber que numero tiene cierta letra asociada, como en los metodos de firstPos y followPos estamos trabajando solo con las posiciones, despues necesitamos saber a que letra corresponde esa posicion.*/
+    for(int p = 0; p<array.size(); p++){
+      lP letraBuscada = array.get(0);
+      if(letraBuscada.posLetraActual.contains(num)){
+        System.out.println("letra: "+letraBuscada.getRegex());
+        return letraBuscada;
+      } 
     }
-    System.out.println("ArrayFinal:"+casoBaseFP.toString());
-    return casoBaseFP;
+    return null;
   }
 
+  public static void followPs(ArrayList<lP> fin){
+    for(int g = 0; g<fin.size(); g++){
+      lP inicio = fin.get(g);
+      followPs(inicio.op1);
+      followPs(inicio.op2);
+      if(inicio.getConcat()){
+        ArrayList<Integer> recursion = new ArrayList<Integer>();
+        ArrayList<Integer> recursion2 = new ArrayList<Integer>();
+        lP letra1 = inicio.devolverLetra1(0);
+        lP letra2 = inicio.devolverLetra2(0);
+        System.out.println("CASO CONCATENACION");
+        System.out.println("letra:"+inicio.getRegex());
+        System.out.println("derivado1:"+letra1.getRegex());
+        System.out.println("derivado2:"+letra2.getRegex());
+        inicio.setKleene(letra1.getKleene() && letra2.getKleene());
+        if(letra1.getRegex() == '*'){
+          recursion.addAll(letra1.posLetraNext);
+          recursion.addAll(letra2.posLetraNext);
+        } else{
+          recursion.addAll(letra2.posLetraNext);
+        }
+        ArrayList<Integer> noDuplicados =  new ArrayList<Integer>();
+        for(int i = 0; i<recursion.size(); i++){
+          int comp = recursion.get(i);
+          if(!noDuplicados.contains(comp)){
+            noDuplicados.add(comp);
+          }
+        }
+        if(!noDuplicados.isEmpty()) {
+          inicio.posLetraNext.addAll(noDuplicados);
+        }
+        
+        if(letra2.getRegex()=='*'){
+          recursion2.addAll(letra1.posLetraActual);
+          recursion2.addAll(letra2.posLetraActual);
+        } else{
+          recursion2.addAll(letra2.posLetraActual);
+        }
+        ArrayList<Integer> noDuplicados2 =  new ArrayList<Integer>();
+        for(int i = 0; i<recursion2.size(); i++){
+          int comp = recursion2.get(i);
+          if(!noDuplicados2.contains(comp)){
+            noDuplicados2.add(comp);
+          }
+        }
+        if(!noDuplicados2.isEmpty()){
+          inicio.posLetraActual.addAll(noDuplicados2);
+        }
+        
+      } else if(inicio.getOr()){
+        ArrayList<Integer> recursion = new ArrayList<Integer>();
+        ArrayList<Integer> recursion2 = new ArrayList<Integer>();
+        lP letra1 = inicio.devolverLetra1(0);
+        lP letra2 = inicio.devolverLetra2(0);
+        System.out.println("CASO OR");
+        System.out.println("letra:"+inicio.getRegex());
+        System.out.println("derivado1:"+letra1.getRegex());
+        System.out.println("derivado2:"+letra2.getRegex());
+        inicio.setKleene(letra1.getKleene() || letra2.getKleene());
+        recursion.addAll(letra1.posLetraNext);
+        recursion.addAll(letra2.posLetraNext);
+        recursion2.addAll(letra1.posLetraActual);
+        recursion2.addAll(letra2.posLetraActual);
+        ArrayList<Integer> noDuplicados =  new ArrayList<Integer>();
+        for(int i = 0; i<recursion.size(); i++){
+          int comp = recursion.get(i);
+          if(!noDuplicados.contains(comp)){
+            noDuplicados.add(comp);
+          }
+        }
+        if(!noDuplicados.isEmpty()){
+          inicio.posLetraNext.addAll(noDuplicados);
+        }
+        ArrayList<Integer> noDuplicados2 =  new ArrayList<Integer>();
+        for(int i = 0; i<recursion2.size(); i++){
+          int comp = recursion2.get(i);
+          if(!noDuplicados2.contains(comp)){
+            noDuplicados2.add(comp);
+          }
+        }
+        if(!noDuplicados2.isEmpty()){
+          inicio.posLetraActual.addAll(noDuplicados2);
+        }
+        
+      } else if(inicio.getRegex() == '*'){
+        ArrayList<Integer> recursion = new ArrayList<Integer>();
+        ArrayList<Integer> recursion2 = new ArrayList<Integer>();
+        lP letra1 = inicio.devolverLetra1(0);
+        System.out.println("CASO KLEENE");
+        System.out.println("letra:"+inicio.getRegex());
+        System.out.println("derivado1:"+letra1.getRegex());
+        recursion.addAll(letra1.posLetraNext);
+        recursion2.addAll(letra1.posLetraNext);
+        
+        ArrayList<Integer> noDuplicados =  new ArrayList<Integer>();
+        for(int i = 0; i<recursion.size(); i++){
+          int comp = recursion.get(i);
+          if(!noDuplicados.contains(comp)){
+            noDuplicados.add(comp);
+          }
+        }
+        if(!noDuplicados.isEmpty()){
+          inicio.posLetraNext.addAll(noDuplicados);
+        }
+        ArrayList<Integer> noDuplicados2 =  new ArrayList<Integer>();
+        for(int i = 0; i<recursion2.size(); i++){
+          int comp = recursion2.get(i);
+          if(!noDuplicados2.contains(comp)){
+            noDuplicados2.add(comp);
+          }
+        }
+        if(!noDuplicados2.isEmpty()){
+          inicio.posLetraActual.addAll(noDuplicados2);
+        }
+      }
+      System.out.println("letra next:"+inicio.posLetraNext.toString());
+      System.out.println("letra ant:"+inicio.posLetraActual.toString());
+    }
+  }
 
+  public static void correcionfolowpos(ArrayList<lP> posfin){
+    followPs(posfin);
+    
+    /*for(int y =0; y<posfin.size(); y++){
+      lP inicio = posfin.get(y);
+      
+      correcionfolowpos(inicio.op1);
+      correcionfolowpos(inicio.op2);
+      if(inicio.getConcat()){
+        lP letra1 = inicio.devolverLetra1(0);
+        lP letra2 = inicio.devolverLetra2(0);
+        
+      }
+      HashSet<Integer> transitorio = new HashSet<Integer>();
+      for(int q=0; q<inicio.posLetraNext.size(); q++){
+        transitorio.add(inicio.posLetraNext.remove(q));
+        q--;
+      }
+      inicio.posLetraNext.addAll(transitorio);
 
+      HashSet<Integer> transitorio2 = new HashSet<Integer>();
+      for(int q=0; q<inicio.posLetraActual.size(); q++){
+        transitorio.add(inicio.posLetraActual.remove(q));
+        q--;
+      }
+      inicio.posLetraActual.addAll(transitorio2);
+    }*/
+    
+    System.out.println(posfin.toString());
+  }
 
   public static void main(String[] args) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
@@ -583,9 +683,20 @@ public class ea{
     String prueba = teclado.readLine();
     System.out.println(extendRE(prueba));
     auxPosiciones(extendRE(prueba));
+    relaciones(auxPosiciones(extendRE(prueba)));
     firstPos(relaciones(auxPosiciones(extendRE(prueba))));
-    ArrayList<Integer> fp = new ArrayList<Integer>();
-    casoBasefollowPos( relaciones(auxPosiciones(extendRE(prueba))), fp);
+    //ArrayList<Integer> fp = new ArrayList<Integer>();
+    //casoBasefollowPos( relaciones(auxPosiciones(extendRE(prueba))));
+    //followPos(relaciones(auxPosiciones(extendRE(prueba))));
+    ArrayList<lP> inicio = relaciones(auxPosiciones(extendRE(prueba)));
+    //lP fin = inicio.get(0);
+    followPs( inicio );
+    correcionfolowpos(inicio);
+    //analisisfolowpos(inicio);
+    //HashMap<Integer, ArrayList<Integer>> follow = new HashMap<Integer, ArrayList<Integer>>();
+    //foPos(inicio, follow);
+    //follow(fin);
+    //test();
   }
   
 }
