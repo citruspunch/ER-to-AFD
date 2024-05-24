@@ -4,48 +4,46 @@ import java.util.*;
 
 public class ER{
 
-  private static String regExp;
   public static final int ESTADOERROR = 0;
   public static final int ESTADOINICIAL = 1;
 
-  public ER(String er){
-    regExp = er;
-  }
-
   public ArrayList<String> toGLD(char[] alfabeto, int[][] afdTransiciones, int cantEstados, int[] estadosFinales, boolean archivo){
     ArrayList<String> GLD = new ArrayList<String>();
-
     // Se crea un array de caracteres con los nombres de los simbolos no terminales
-    char[] noTerminales = new char[cantEstados];
+    ArrayList<Character> noTerminales = new ArrayList<Character>();
 
-    for (int i = 1; i <= cantEstados; i++) {
+    for(int i = 0; i < cantEstados; i++){
       if (i == ESTADOERROR){
-        noTerminales[i] = (char) ('A');
+        noTerminales.add((char) ('A'));
       } else if(i == ESTADOINICIAL){
-        noTerminales[i] = 'S';
+        noTerminales.add('S');
       } else if(!((char) ('A' + i) == 'S')){
-        noTerminales[i] = (char) ('A' + i);
+        noTerminales.add((char) ('A' + i));
       } else {
-        noTerminales[i] = (char) ('A' + i + 1);
+        noTerminales.add((char) ('A' + i + 1));
       }
     }
 
     for (int col=0; col<cantEstados; col++){
       for (int row=0; row<alfabeto.length; row++){
-        if (col == ESTADOERROR){
-          GLD.add(noTerminales[col] + " -> " + alfabeto[row] + noTerminales[ESTADOERROR]);
-        } else if (col == ESTADOINICIAL){
-          GLD.add(noTerminales[col] + " -> " + alfabeto[row] + noTerminales[afdTransiciones[row][col]]);
-        } else {
-          boolean estadoFinal = isFinal(col, estadosFinales);
-          GLD.add(noTerminales[col] + " -> " + alfabeto[row] + noTerminales[afdTransiciones[row][col]]);
-          // Si es estado Final se agrega regla de produccion con lambda
-          if (estadoFinal){
-            GLD.add(noTerminales[col] + " -> λ");
+          if (col == ESTADOERROR){
+              GLD.add(noTerminales.get(col) + " -> " + alfabeto[row] + noTerminales.get(ESTADOERROR));
+          } else if (col == ESTADOINICIAL){
+              GLD.add(noTerminales.get(col) + " -> " + alfabeto[row] + noTerminales.get(afdTransiciones[row][col]));
+          } else {
+              //boolean estadoFinal = isFinal(col, estadosFinales);
+              GLD.add(noTerminales.get(col) + " -> " + alfabeto[row] + noTerminales.get(afdTransiciones[row][col]));
+              /* Si es estado Final se agrega regla de produccion con lambda
+              if (estadoFinal){
+                  GLD.add(noTerminales.get(col) + " -> λ");
+              }*/
           }
-        }
       }
     }
+    for (int i = 0; i < estadosFinales.length; i++) {
+      GLD.add(noTerminales.get(estadosFinales[i]) + " -> λ");
+    }
+
     if (archivo){
       genArchivoGLD(GLD, noTerminales);
     }
@@ -61,18 +59,18 @@ public class ER{
     return false;
   }
 
-  private void genArchivoGLD(ArrayList<String> GLD, char[] simbolosNT) {
+  private void genArchivoGLD(ArrayList<String> GLD, ArrayList<Character> simbolosNT) {
     try {
       FileWriter writer = new FileWriter("GLD.gld");
 
-      for (int i = 0; i < simbolosNT.length; i++) {
-        writer.write(simbolosNT[i]);
-        if (i < simbolosNT.length - 1) {
+      for (int i = 0; i < simbolosNT.size(); i++) {
+        writer.write(simbolosNT.get(i));
+        if (i < simbolosNT.size() - 1) {
           writer.write(", ");
         }
       }
       writer.write(System.lineSeparator());
-      writer.write("a, b, c" + System.lineSeparator()); 
+      writer.write("a, b, c, d" + System.lineSeparator()); 
       for (String str : GLD) {
         writer.write(str + System.lineSeparator());
       }
@@ -236,41 +234,18 @@ public class ER{
   public static void main(String args[]) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
     
-    char[] alfabeto = {'a', 'b', 'c'};
+    char[] alfabeto = {'a', 'b', 'c', 'd'};
     System.out.println("ALFABETO: " + Arrays.toString(alfabeto));
-    System.out.println("Ingrese la expresion regular: ");
-    String re = teclado.readLine();
-    System.out.println("Desea convertir a: ");
-    System.out.println("1. AFD");
-    System.out.println("2. GLD");
-    System.out.println("3. Ambos");
-    int opcion = Integer.parseInt(teclado.readLine());
-    switch (opcion) {
-      case 1:
-        // Implementar conversion a AFD
-        break;
-        /*
-      case 2:
-        int[][] afdTransiciones = getAFDTransiciones();
-        int cantEstados = getCantEstados();
-        int[] estadosFinales = getEstadosFinales();
-        boolean imprimir = true;
-        toGLD(alfabeto, afdTransiciones, cantEstados, estadosFinales, imprimir);
-        // Implementar conversion a GLD
-        break;
-      case 3:
-        // Implementar conversion a AFD
-        // Implementar conversion a GLD
-        int[][] afdTransiciones = getAFDTransiciones();
-        int cantEstados = getCantEstados();
-        int[] estadosFinales = getEstadosFinales();
-        boolean imprimir = true;
-        toGLD(alfabeto, afdTransiciones, cantEstados, estadosFinales, imprimir);
-        break;
-      default:
-        System.out.println("Opcion no valida");
-        break;
-      */
-    }
+    int cantEstados = 5;
+    int[][] AFD = {
+      {0, 2, 0, 1, 2},
+      {0, 2, 3, 2, 1},
+      {0, 4, 2, 1, 4},
+      {0, 3, 4, 3, 4},
+    }; 
+    int[] estadosFinales = {4};
+    ER er = new ER();
+    er.toGLD(alfabeto, AFD, cantEstados, estadosFinales, true);
+    er.minimizarAFD(AFD, alfabeto, cantEstados, estadosFinales, true);
   }
 }
