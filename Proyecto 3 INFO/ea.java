@@ -514,14 +514,16 @@ public class ea{
     return firstPosA; 
   }
 
-  public static lP numAletra(ArrayList<lP> array, int num){
+  public static lP numAletra(int num, String regex){
   /*El proposito de esta funcion es saber que numero tiene cierta letra asociada, como en los metodos de firstPos y followPos estamos trabajando solo con las posiciones, despues necesitamos saber a que letra corresponde esa posicion.*/
-    for(int p = 0; p<array.size(); p++){
-      lP letraBuscada = array.get(0);
+    ArrayList<lP> posiciones = auxPosiciones(extendRE(regex));
+    
+    for(int p = 0; p<posiciones.size(); p++){
+      lP letraBuscada = posiciones.get(p);
       if(letraBuscada.posLetraActual.contains(num)){
         System.out.println("letra: "+letraBuscada.getRegex());
         return letraBuscada;
-      } 
+      }
     }
     return null;
   }
@@ -529,8 +531,12 @@ public class ea{
   public static void followPs(ArrayList<lP> fin){
     for(int g = 0; g<fin.size(); g++){
       lP inicio = fin.get(g);
-      followPs(inicio.op1);
-      followPs(inicio.op2);
+      ArrayList<lP> l1 = new ArrayList<lP>();
+      ArrayList<lP> l2 = new ArrayList<lP>();
+      l1.add(inicio.devolverLetra1(0));
+      l2.add(inicio.devolverLetra2(0));
+      followPs(l1);
+      followPs(l2);
       if(inicio.getConcat()){
         ArrayList<Integer> recursion = new ArrayList<Integer>();
         ArrayList<Integer> recursion2 = new ArrayList<Integer>();
@@ -541,7 +547,7 @@ public class ea{
         System.out.println("derivado1:"+letra1.getRegex());
         System.out.println("derivado2:"+letra2.getRegex());
         inicio.setKleene(letra1.getKleene() && letra2.getKleene());
-        if(letra1.getRegex() == '*'){
+        if(letra1.getKleene()){
           recursion.addAll(letra1.posLetraNext);
           recursion.addAll(letra2.posLetraNext);
         } else{
@@ -551,18 +557,18 @@ public class ea{
         if(!noDuplicados.isEmpty()) {
           inicio.posLetraNext.addAll(noDuplicados);
         }
-        
-        if(letra2.getRegex()=='*'){
+
+        if(letra2.getKleene()){
           recursion2.addAll(letra1.posLetraActual);
           recursion2.addAll(letra2.posLetraActual);
         } else{
-          recursion2.addAll(letra2.posLetraActual);
+          recursion2.addAll(letra1.posLetraActual);
         }
         ArrayList<Integer> noDuplicados2 = quitarDuplicados(recursion);
         if(!noDuplicados2.isEmpty()){
           inicio.posLetraActual.addAll(noDuplicados2);
         }
-        
+
       } else if(inicio.getOr()){
         ArrayList<Integer> recursion = new ArrayList<Integer>();
         ArrayList<Integer> recursion2 = new ArrayList<Integer>();
@@ -585,8 +591,8 @@ public class ea{
         if(!noDuplicados2.isEmpty()){
           inicio.posLetraActual.addAll(noDuplicados2);
         }
-        
-      } else if(inicio.getRegex() == '*'){
+
+      } else if(inicio.getKleene()){
         ArrayList<Integer> recursion = new ArrayList<Integer>();
         ArrayList<Integer> recursion2 = new ArrayList<Integer>();
         lP letra1 = inicio.devolverLetra1(0);
@@ -595,7 +601,7 @@ public class ea{
         System.out.println("derivado1:"+letra1.getRegex());
         recursion.addAll(letra1.posLetraNext);
         recursion2.addAll(letra1.posLetraNext);
-        
+
         ArrayList<Integer> noDuplicados = quitarDuplicados(recursion);
         if(!noDuplicados.isEmpty()){
           inicio.posLetraNext.addAll(noDuplicados);
@@ -612,6 +618,7 @@ public class ea{
       System.out.println("letra ant:"+inicio.posLetraActual.toString());
     }
   }
+  
   public static ArrayList<Integer> quitarDuplicados(ArrayList<Integer> duplicados){
     ArrayList<Integer> noDuplicados =  new ArrayList<Integer>();
     for(int i = 0; i<duplicados.size(); i++){
@@ -622,36 +629,18 @@ public class ea{
     }
     return noDuplicados;
   }
-  public static void correcionfolowpos(ArrayList<lP> posfin){
-    followPs(posfin);
-    
-    /*for(int y =0; y<posfin.size(); y++){
-      lP inicio = posfin.get(y);
-      
-      correcionfolowpos(inicio.op1);
-      correcionfolowpos(inicio.op2);
-      if(inicio.getConcat()){
-        lP letra1 = inicio.devolverLetra1(0);
-        lP letra2 = inicio.devolverLetra2(0);
-        
-      }
-      HashSet<Integer> transitorio = new HashSet<Integer>();
-      for(int q=0; q<inicio.posLetraNext.size(); q++){
-        transitorio.add(inicio.posLetraNext.remove(q));
-        q--;
-      }
-      inicio.posLetraNext.addAll(transitorio);
 
-      HashSet<Integer> transitorio2 = new HashSet<Integer>();
-      for(int q=0; q<inicio.posLetraActual.size(); q++){
-        transitorio.add(inicio.posLetraActual.remove(q));
-        q--;
-      }
-      inicio.posLetraActual.addAll(transitorio2);
-    }*/
-    
-    System.out.println(posfin.toString());
+
+  public HashMap<Integer, ArrayList<Integer>> conexiones(ArrayList<lP> folow){
+    followPs(folow);
+    HashMap<Integer, ArrayList<Integer>> conex = new HashMap<Integer, ArrayList<Integer>>();
+    for(int d = 0; d<folow.size(); d++){
+      
+    }
+    return conex;
   }
+
+  
 
   public static void main(String[] args) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
@@ -659,15 +648,16 @@ public class ea{
     String prueba = teclado.readLine();
     System.out.println(extendRE(prueba));
     auxPosiciones(extendRE(prueba));
-    relaciones(auxPosiciones(extendRE(prueba)));
-    firstPos(relaciones(auxPosiciones(extendRE(prueba))));
+    numAletra(2, prueba);
+    //relaciones(auxPosiciones(extendRE(prueba)));
+    //firstPos(relaciones(auxPosiciones(extendRE(prueba))));
     //ArrayList<Integer> fp = new ArrayList<Integer>();
     //casoBasefollowPos( relaciones(auxPosiciones(extendRE(prueba))));
     //followPos(relaciones(auxPosiciones(extendRE(prueba))));
-    ArrayList<lP> inicio = relaciones(auxPosiciones(extendRE(prueba)));
+    //ArrayList<lP> inicio = relaciones(auxPosiciones(extendRE(prueba)));
     //lP fin = inicio.get(0);
-    followPs( inicio );
-    correcionfolowpos(inicio);
+    //followPs( inicio );
+    //correcionfolowpos(inicio);
     //analisisfolowpos(inicio);
     //HashMap<Integer, ArrayList<Integer>> follow = new HashMap<Integer, ArrayList<Integer>>();
     //foPos(inicio, follow);
