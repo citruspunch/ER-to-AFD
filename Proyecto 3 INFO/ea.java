@@ -600,13 +600,14 @@ public class ea{
         if(!noDuplicados.isEmpty()){
           inicio.posLetraNext.addAll(noDuplicados);
           ArrayList<Integer> arrayPrueba = inicio.posLetraNext;
-          noDuplicados(arrayPrueba);
         }
         ArrayList<Integer> noDuplicados2 = quitarDuplicados(recursion);
         if(!noDuplicados2.isEmpty()){
           inicio.posLetraActual.addAll(noDuplicados2);
         }
       }
+      inicio.posLetraActual = quitarDuplicados(inicio.posLetraActual);
+      inicio.posLetraNext = quitarDuplicados(inicio.posLetraNext);
       System.out.println("letra next:"+inicio.posLetraNext.toString());
       System.out.println("letra ant:"+inicio.posLetraActual.toString());
     }
@@ -621,7 +622,6 @@ public class ea{
     }
     return noDuplicados;
   }
-
   public static void correcionfolowpos(ArrayList<lP> posfin){
     followPs(posfin);
     
