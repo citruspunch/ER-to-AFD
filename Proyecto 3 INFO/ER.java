@@ -6,7 +6,51 @@ public class ER{
 
   public static final int ESTADOERROR = 0;
   public static final int ESTADOINICIAL = 1;
-
+  private char[] alfabeto;
+  private int cantEstados;
+  private int[] estadosFinales;
+	private String[][] matrizTransicion;
+  
+  public ER(String path){
+    // Se lee el archivo y se almacena la informacion en las variables
+		String[] contenido = readFile(path).split("\n");
+		// Se guarda el alfabeto
+		String[] alfabetoStrings = contenido[0].split(",");
+		alfabeto = new char[alfabetoStrings.length];
+		for (int i = 0; i < alfabetoStrings.length; i++) {
+			alfabeto[i] = alfabetoStrings[i].charAt(0);
+		}
+		// Se guarda la cantidad de estados
+		cantEstados = Integer.parseInt(contenido[1]);
+		// Se inicializa el arreglo de estados finales
+		estadosFinales = new int[contenido[2].split(",").length];
+		// Se guardan los estados finales
+		for (int i = 0; i < estadosFinales.length; i++) {
+			estadosFinales[i] = Integer.parseInt(contenido[2].split(",")[i]);
+		}
+		// Se guarda la matriz de transicion
+		matrizTransicion = new String[alfabeto.length + 1][cantEstados];
+		for (int row = 0; row <= alfabeto.length; row++) {
+			String[] transiciones = contenido[row + 3].split(","); // Se suma 3 porque las primeras 3 lineas no son transiciones
+			for (int col = 0; col < cantEstados; col++) {
+				matrizTransicion[row][col] = transiciones[col]; // Se guarda la transicion en la matriz
+			}
+		}
+  }
+  public String readFile(String path){
+		// Implementar la lectura del archivo
+		StringBuilder contenido = new StringBuilder();
+		try (BufferedReader buff = new BufferedReader(new FileReader(path))) {
+      String linea;
+			// Leer el archivo linea por linea y almacenar el contenido en un StringBuilder
+      while ((linea = buff.readLine()) != null) {
+          contenido.append(linea).append("\n");
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return contenido.toString();
+	}
   public ArrayList<String> toGLD(char[] alfabeto, int[][] afdTransiciones, int cantEstados, int[] estadosFinales, boolean archivo){
     ArrayList<String> GLD = new ArrayList<String>();
     // Se crea un array de caracteres con los nombres de los simbolos no terminales
@@ -180,7 +224,7 @@ public class ER{
       writer.write(System.lineSeparator());
       writer.write(cantEstados + System.lineSeparator());
       for (int i = 0; i < estadosFinales.length; i++) {
-        writer.write(estadosFinales[i]);
+        writer.write(Integer.toString(estadosFinales[i]));
         if (i < estadosFinales.length - 1) {
           writer.write(", ");
         }
@@ -188,13 +232,13 @@ public class ER{
       writer.write(System.lineSeparator());
       for (int fila = 0; fila < alfabeto.length; fila++) {
         for (int col = 0; col < transicionesMinimizadas[fila].length; col++) {
-          writer.write(transicionesMinimizadas[fila][col]);
+          writer.write(Integer.toString(transicionesMinimizadas[fila][col]));
           if (col < transicionesMinimizadas[fila].length - 1) {
             writer.write(", ");
           }
         }
         writer.write(System.lineSeparator());
-      }
+    }
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
@@ -234,16 +278,14 @@ public class ER{
   public static void main(String args[]) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
     
-    char[] alfabeto = {'a', 'b', 'c', 'd'};
+    char[] alfabeto = {'a', 'b'};
     System.out.println("ALFABETO: " + Arrays.toString(alfabeto));
-    int cantEstados = 5;
+    int cantEstados = 4;
     int[][] AFD = {
-      {0, 2, 0, 1, 2},
-      {0, 2, 3, 2, 1},
-      {0, 4, 2, 1, 4},
-      {0, 3, 4, 3, 4},
+      {1, 2, 3, 3},
+      {0, 1, 2, 1},
     }; 
-    int[] estadosFinales = {4};
+    int[] estadosFinales = {1};
     ER er = new ER();
     er.toGLD(alfabeto, AFD, cantEstados, estadosFinales, true);
     er.minimizarAFD(AFD, alfabeto, cantEstados, estadosFinales, true);
