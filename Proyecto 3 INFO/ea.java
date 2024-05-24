@@ -547,13 +547,7 @@ public class ea{
         } else{
           recursion.addAll(letra2.posLetraNext);
         }
-        ArrayList<Integer> noDuplicados =  new ArrayList<Integer>();
-        for(int i = 0; i<recursion.size(); i++){
-          int comp = recursion.get(i);
-          if(!noDuplicados.contains(comp)){
-            noDuplicados.add(comp);
-          }
-        }
+        ArrayList<Integer> noDuplicados = quitarDuplicados(recursion);
         if(!noDuplicados.isEmpty()) {
           inicio.posLetraNext.addAll(noDuplicados);
         }
@@ -564,13 +558,7 @@ public class ea{
         } else{
           recursion2.addAll(letra2.posLetraActual);
         }
-        ArrayList<Integer> noDuplicados2 =  new ArrayList<Integer>();
-        for(int i = 0; i<recursion2.size(); i++){
-          int comp = recursion2.get(i);
-          if(!noDuplicados2.contains(comp)){
-            noDuplicados2.add(comp);
-          }
-        }
+        ArrayList<Integer> noDuplicados2 = quitarDuplicados(recursion);
         if(!noDuplicados2.isEmpty()){
           inicio.posLetraActual.addAll(noDuplicados2);
         }
@@ -589,23 +577,11 @@ public class ea{
         recursion.addAll(letra2.posLetraNext);
         recursion2.addAll(letra1.posLetraActual);
         recursion2.addAll(letra2.posLetraActual);
-        ArrayList<Integer> noDuplicados =  new ArrayList<Integer>();
-        for(int i = 0; i<recursion.size(); i++){
-          int comp = recursion.get(i);
-          if(!noDuplicados.contains(comp)){
-            noDuplicados.add(comp);
-          }
-        }
+        ArrayList<Integer> noDuplicados = quitarDuplicados(recursion);
         if(!noDuplicados.isEmpty()){
           inicio.posLetraNext.addAll(noDuplicados);
         }
-        ArrayList<Integer> noDuplicados2 =  new ArrayList<Integer>();
-        for(int i = 0; i<recursion2.size(); i++){
-          int comp = recursion2.get(i);
-          if(!noDuplicados2.contains(comp)){
-            noDuplicados2.add(comp);
-          }
-        }
+        ArrayList<Integer> noDuplicados2 = quitarDuplicados(recursion);
         if(!noDuplicados2.isEmpty()){
           inicio.posLetraActual.addAll(noDuplicados2);
         }
@@ -620,23 +596,13 @@ public class ea{
         recursion.addAll(letra1.posLetraNext);
         recursion2.addAll(letra1.posLetraNext);
         
-        ArrayList<Integer> noDuplicados =  new ArrayList<Integer>();
-        for(int i = 0; i<recursion.size(); i++){
-          int comp = recursion.get(i);
-          if(!noDuplicados.contains(comp)){
-            noDuplicados.add(comp);
-          }
-        }
+        ArrayList<Integer> noDuplicados = quitarDuplicados(recursion);
         if(!noDuplicados.isEmpty()){
           inicio.posLetraNext.addAll(noDuplicados);
+          ArrayList<Integer> arrayPrueba = inicio.posLetraNext;
+          noDuplicados(arrayPrueba);
         }
-        ArrayList<Integer> noDuplicados2 =  new ArrayList<Integer>();
-        for(int i = 0; i<recursion2.size(); i++){
-          int comp = recursion2.get(i);
-          if(!noDuplicados2.contains(comp)){
-            noDuplicados2.add(comp);
-          }
-        }
+        ArrayList<Integer> noDuplicados2 = quitarDuplicados(recursion);
         if(!noDuplicados2.isEmpty()){
           inicio.posLetraActual.addAll(noDuplicados2);
         }
@@ -644,6 +610,16 @@ public class ea{
       System.out.println("letra next:"+inicio.posLetraNext.toString());
       System.out.println("letra ant:"+inicio.posLetraActual.toString());
     }
+  }
+  public static ArrayList<Integer> quitarDuplicados(ArrayList<Integer> duplicados){
+    ArrayList<Integer> noDuplicados =  new ArrayList<Integer>();
+    for(int i = 0; i<duplicados.size(); i++){
+      int comp = duplicados.get(i);
+      if(!noDuplicados.contains(comp)){
+        noDuplicados.add(comp);
+      }
+    }
+    return noDuplicados;
   }
 
   public static void correcionfolowpos(ArrayList<lP> posfin){
