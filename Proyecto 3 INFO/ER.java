@@ -235,7 +235,7 @@ public class ER{
       for (int i = 0; i < alfabeto.length; i++) {
         writer.write(alfabeto[i]);
         if (i < alfabeto.length - 1) {
-          writer.write(", ");
+          writer.write(",");
         }
       }
       writer.write(System.lineSeparator());
@@ -244,7 +244,7 @@ public class ER{
       for (int i = 0; i < estadosFinales.length; i++) {
         writer.write(Integer.toString(estadosFinales[i]));
         if (i < estadosFinales.length - 1) {
-          writer.write(", ");
+          writer.write(",");
         }
       }
       writer.write(System.lineSeparator());
@@ -267,7 +267,7 @@ public class ER{
   public boolean parsingAFD(String cuerda, int[][] AFD, int[] estadosFinales){
     int estadoActual = ESTADOINICIAL;
     for (char c: cuerda.toCharArray()){
-      if (c != 'a' && c != 'b' && c != 'c'){
+      if (c != 'a' && c != 'b' && c != 'c' && c != 'd'){
         return false;
       }
       int cIndex = getCharIndex(c);
@@ -290,6 +290,8 @@ public class ER{
         return 1;
       case 'c':
         return 2;
+      case 'd':
+        return 3;
       default:
         return -1; // Error
     }
