@@ -231,6 +231,7 @@ public class ER{
   private void genArchivoMinimizacion(int[][] transicionesMinimizadas, int cantEstados, int[] estadosFinales) {
     try {
       FileWriter writer = new FileWriter("AFDmin.txt");
+      // Imprime el alfabeto
       for (int i = 0; i < alfabeto.length; i++) {
         writer.write(alfabeto[i]);
         if (i < alfabeto.length - 1) {
@@ -238,6 +239,7 @@ public class ER{
         }
       }
       writer.write(System.lineSeparator());
+      // Imprime la cantidad de estados
       writer.write(cantEstados + System.lineSeparator());
       for (int i = 0; i < estadosFinales.length; i++) {
         writer.write(Integer.toString(estadosFinales[i]));
@@ -246,6 +248,7 @@ public class ER{
         }
       }
       writer.write(System.lineSeparator());
+      // Imprime las transiciones
       for (int fila = 0; fila < alfabeto.length; fila++) {
         for (int col = 0; col < transicionesMinimizadas[fila].length; col++) {
           writer.write(Integer.toString(transicionesMinimizadas[fila][col]));
@@ -293,7 +296,7 @@ public class ER{
   }
   public static void main(String args[]) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
-    System.out.println("MENU");
+    System.out.println("*********  MENU  *********\n");
     System.out.println("1. Convertir Archivo AFD a GLD");
     System.out.println("2. Minimizar AFD");
     System.out.println("3. Aceptación de cuerda");
