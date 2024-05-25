@@ -262,7 +262,7 @@ public class ER{
   public boolean parsingAFD(String cuerda, int[][] AFD, int[] estadosFinales){
     int estadoActual = ESTADOINICIAL;
     for (char c: cuerda.toCharArray()){
-      if (c != 'a' && c != 'b' && c != 'c'){
+      if (c != 'a' && c != 'b' && c != 'c' && c != 'd'){
         return false;
       }
       int cIndex = getCharIndex(c);
@@ -285,6 +285,8 @@ public class ER{
         return 1;
       case 'c':
         return 2;
+      case 'd':
+        return 3;
       default:
         return -1; // Error
     }

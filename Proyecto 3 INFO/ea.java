@@ -5,8 +5,8 @@ class lP{
   //Esta clase es un apoyo, sirve para distinguir con que caracter de la expresion regular estamos tratando, si se trata de una letra, "a", o un operador, "*" y asi poder asignarle una posicion concreta y estática a cada letra para que en el resto de métodos siempre tengamos consistencia con las posiciones.
   
   protected Character regex;
-  protected boolean kleene,or,concat,er;
-  protected ArrayList<Integer> posLetraActual, posLetraNext, posFP;
+  protected boolean kleene,or,concat,er,hashtag;
+  protected ArrayList<Integer> posLetraActual, posLetraNext, posEnFP, posConLetra;
   protected ArrayList<lP> op1, op2;
   protected int num;
 
@@ -30,7 +30,15 @@ class lP{
     this.posLetraActual.add(num);
     this.posLetraNext.add(num);
     this.er = true;
-    
+  }
+
+  //para las posiciones de followPos
+  public lP(ArrayList<Integer> posEnFP, char letra){
+    this.regex = letra;
+    this.posEnFP = new ArrayList<Integer>();
+    this.posEnFP.addAll(posEnFP);
+    this.posConLetra = new ArrayList<Integer>();
+    this.hashtag = false;
   }
 
   //Getters y setters 
@@ -84,10 +92,19 @@ class lP{
     if(this.getRegex() == '*' || this.getRegex()=='.' || this.getRegex()== '+' || this.getRegex()== '|' || this.getRegex()== ')' || this.getRegex()== '(' ){
       oStr.append("{ "+this.getRegex() + " -> "+  this.op1.toString() + ", "+ this.op2.toString()+ "posAnt: "+this.posLetraActual+","+"letraNxt:"+this.posLetraNext+" }");
       return oStr.toString();
-    } else {
+    } else if(this.posLetraActual == null && this.posLetraNext == null){
+      oStr.append(toStringFP());
+      return oStr.toString();
+      } else {
       oStr.append("{ "+this.getRegex() + " -> "+  this.posLetraActual.toString()+","+this.posLetraNext +" }");
       return oStr.toString();
     }
+  }
+
+  public String toStringFP(){
+    StringBuilder oStr = new StringBuilder();
+    oStr.append(this.posEnFP.toString() + ","+this.regex);
+    return oStr.toString();
   }
 
 }
@@ -118,19 +135,6 @@ public class ea{
       return false;
     }
 
-  public static void test(){
-    //lo hice solo para saber si un addAll sobreescribia las cosas de un array o no
-    ArrayList<Integer> test = new ArrayList<Integer>();
-    test.add(1);
-    test.add(2);
-    System.out.println("test1:"+test.toString());
-    ArrayList<Integer> test2 = new ArrayList<Integer>();
-    test2.add(3);
-    test2.add(4);
-    System.out.println("test2:"+test2.toString());
-    test.addAll(test2);
-    System.out.println("testFinal:"+test.toString());
-  }
 
   public static String extendRE(String re){
 //Se encarga de agregar el caracter # donde debe finalizar la expresion regular, asi como agregar un "." donde hay concatenaciones y cambiar la clausura positiva + a una expresion de la forma a.a* .
@@ -510,22 +514,22 @@ public class ea{
     firstPosA.addAll(transitorio);
     
     /*System.out.println(posiblefirstPos.toString());*/
-    System.out.println(firstPosA.toString());
+    /*System.out.println(firstPosA.toString());*/
     return firstPosA; 
   }
 
-  public static lP numAletra(int num, String regex){
+  public static char numAletra(int num, String regex,ArrayList<lP> posiciones){
   /*El proposito de esta funcion es saber que numero tiene cierta letra asociada, como en los metodos de firstPos y followPos estamos trabajando solo con las posiciones, despues necesitamos saber a que letra corresponde esa posicion.*/
-    ArrayList<lP> posiciones = auxPosiciones(extendRE(regex));
-    
+    //System.out.println(regex);
+    //System.out.println(posiciones.toString());
     for(int p = 0; p<posiciones.size(); p++){
       lP letraBuscada = posiciones.get(p);
       if(letraBuscada.posLetraActual.contains(num)){
         System.out.println("letra: "+letraBuscada.getRegex());
-        return letraBuscada;
+        return letraBuscada.getRegex();
       }
     }
-    return null;
+    return 'e';
   }
 
   public static void followPs(ArrayList<lP> fin){
@@ -689,76 +693,124 @@ public class ea{
     return conex;
   }
 
-  public boolean contieneHashtag(ArrayList<Integer> estado, String regex){
-    for (Integer indice : estado) {
-      lP letra = numAletra(indice, regex);
-      if (letra.getRegex() == '#') {
+  public static boolean contieneHashtag(ArrayList<Integer> estado, String regex, ArrayList<lP> aux){
+    for (int indice=0; indice<estado.size(); indice++) {
+      char at = numAletra(indice, regex, aux);
+      if (at == '#') {
         return true;
       }
     }
     return false;
   }
 
-  public void ERtoAFD(ArrayList<Integer> firstPos, HashMap<Integer, ArrayList<Integer>> followPos, String regex){
-    HashMap<Integer, ArrayList<Integer>> estadosNuevos = new HashMap<Integer, ArrayList<Integer>>();
-    int cont = 1;
-    estadosNuevos.put(cont, firstPos);
-    String[] alfabeto = {"a", "b", "c", "d",};
-    ArrayList<ArrayList<Integer>> arrayPorLetra = new ArrayList<ArrayList<Integer>>();
-    ArrayList<Integer> letraA = new ArrayList<Integer>();
-    ArrayList<Integer> letraB = new ArrayList<Integer>();
-    ArrayList<Integer> letraC = new ArrayList<Integer>();
-    ArrayList<Integer> letraD = new ArrayList<Integer>();
-    arrayPorLetra.add(letraA);
-    arrayPorLetra.add(letraB);
-    arrayPorLetra.add(letraC);
-    arrayPorLetra.add(letraD);
+  /*public static ArrayList<Integer> orden(ArrayList<Integer> nuevo){
+    
+  }*/
 
-    for (int elemento = 1; elemento <= estadosNuevos.size(); elemento++) {
-      for (Integer indice : estadosNuevos.get(elemento)) {
-        int indexLetra = indice;
-        lP letra = numAletra(indexLetra, regex);
-        if (letra.getRegex() == 'a') {
-          arrayPorLetra.get(0).addAll(letra.posLetraNext);
-        } else if (letra.getRegex() == 'b') {
-          arrayPorLetra.get(1).addAll(letra.posLetraNext);
-        } else if (letra.getRegex() == 'c') {
-          arrayPorLetra.get(2).addAll(letra.posLetraNext);
-        } else if (letra.getRegex() == 'd') {
-          arrayPorLetra.get(3).addAll(letra.posLetraNext);
+
+  public static void follow2Pos(HashMap<Integer, ArrayList<Integer>> conex, HashMap<lP, ArrayList<Integer>>follow2Pos, ArrayList<Integer> firstPos, String regex, ArrayList<lP> aux){
+    ArrayList<ArrayList<Integer>> estados = new ArrayList<ArrayList<Integer>>();
+    //[[1,2,3],[2,3,4],..,[1,5,6]]
+    //[1,2,3] con a -> [1,2]
+    //lp[1,2,3],a - >[1,2]
+    //hashmap([1,2,3],a)=[1,2]
+    System.out.println(regex);
+    estados.add(0,firstPos);
+    System.out.println("firstPos:"+estados.get(0).toString());
+    
+    for(int x = 0; x<estados.size(); x++){
+      ArrayList<Integer> analisis = estados.get(x);
+      ArrayList<Integer> letraA = new ArrayList<Integer>();
+      ArrayList<Integer> letraB = new ArrayList<Integer>();
+      ArrayList<Integer> letraC = new ArrayList<Integer>();
+      ArrayList<Integer> letraD = new ArrayList<Integer>();
+      System.out.println("analisis:"+analisis.toString());
+      
+      for(int w = 0; w<analisis.size(); w++){
+        int pos = analisis.get(w);
+        System.out.println("pos: "+pos);
+        if(numAletra(pos,regex,aux) == 'a'){
+          letraA.add(pos);
+          System.out.println("A:"+letraA.toString());
+        } else if(numAletra(pos,regex, aux) == 'b'){
+          letraB.add(pos);
+          System.out.println("B:"+letraB.toString());
+        } else if(numAletra(pos,regex,aux) == 'c'){
+          letraC.add(pos);
+          System.out.println("C:"+letraC.toString());
+        } else if(numAletra(pos,regex,aux) == 'd'){
+          letraD.add(pos);
+          System.out.println("D:"+letraD.toString());
+        } else {
+          continue;
+        }
+        
+      }
+      ArrayList<Integer> nuevoA = new ArrayList<Integer>();
+      if(!letraA.isEmpty()){
+        for(int l = 0; l<letraA.size(); l++){
+          int a = letraA.get(l);
+          nuevoA.addAll(conex.get(a));
+          System.out.println("nuevoA: "+nuevoA.toString());
+        }
+        lP transicion = new lP(analisis,'a');
+        follow2Pos.put(transicion,nuevoA);
+        if(!estados.contains(nuevoA)){
+          estados.add(nuevoA);
         }
       }
 
-      for (int i = 0; i < arrayPorLetra.size(); i++) {
-        // Verificamos en cada arraylist de letras si hay al menos una posicion
-        if (arrayPorLetra.get(i).size() > 0) {
-          ArrayList<Integer> estadoNuevo = new ArrayList<>();
-          // Verificamos el followPos de cada posicion y los unimos en un solo arraylist
-          for (Integer indice : arrayPorLetra.get(i)) {
-            estadoNuevo.addAll(followPos.get(indice));
-          }
-          // Quitamos duplicados de la union
-          estadoNuevo = quitarDuplicados(estadoNuevo);
-          //Si no hay ningun estado con los mismos numeros se mete al hashmap con una llave nueva
-          if (!estadosNuevos.containsValue(estadoNuevo)) {
-            ++cont;
-            estadosNuevos.put(cont, estadoNuevo);
-          }
+      ArrayList<Integer> nuevoB = new ArrayList<Integer>();
+      if(!letraB.isEmpty()){
+        for(int l = 0; l<letraB.size(); l++){
+          int b = letraB.get(l);
+          nuevoB.addAll(conex.get(b));
+          System.out.println("nuevoB: "+nuevoB.toString());
+        }
+        lP transicionB = new lP(analisis,'b');
+        follow2Pos.put(transicionB,nuevoB);
+        if(!estados.contains(nuevoB)){
+          estados.add(nuevoB);
         }
       }
-    }
 
-    // Estados Finales
-    ArrayList<Integer> estadosFinales = new ArrayList<Integer>();
-    for (int i = 1; i <= estadosNuevos.size(); i++) {
-      if (contieneHashtag(estadosFinales, regex) {
-        estadosFinales.add(i);
+      ArrayList<Integer> nuevoC = new ArrayList<Integer>();
+      if(!letraC.isEmpty()){
+        for(int l = 0; l<letraC.size(); l++){
+          int c = letraC.get(l);
+          nuevoC.addAll(conex.get(c));
+          System.out.println("nuevoC: "+nuevoC.toString());
+        }
+        lP transicionC = new lP(analisis,'c');
+        follow2Pos.put(transicionC,nuevoC);
+        if(!estados.contains(nuevoC)){
+          estados.add(nuevoC);
+        }
       }
-    }
-    imprimirAFD(estadosNuevos, estadosFinales);
-  } 
 
-  public void imprimirAFD(HashMap<Integer, ArrayList<Integer>> estadosNuevos, ArrayList<Integer> estadosFinales){
+      ArrayList<Integer> nuevoD = new ArrayList<Integer>();
+      if(!letraD.isEmpty()){
+        for(int l = 0; l<letraD.size(); l++){
+          int d = letraD.get(l);
+          nuevoD.addAll(conex.get(d));
+          System.out.println("nuevoD: "+nuevoD.toString());
+        }
+        lP transicionD = new lP(analisis,'d');
+        follow2Pos.put(transicionD,nuevoD);
+        if(!estados.contains(nuevoD)){
+          estados.add(nuevoD);
+        }
+      }
+      
+    }
+    System.out.println(follow2Pos.toString());
+  }
+
+
+
+  
+  
+  public static void imprimirAFD(HashMap<Integer, ArrayList<Integer>> estadosNuevos, ArrayList<Integer> estadosFinales){
     try {
       FileWriter writer = new FileWriter("AFDregex.txt");
       // Imprimir alfabeto
@@ -804,15 +856,17 @@ public class ea{
     System.out.println("write: ");
     String prueba = teclado.readLine();
     System.out.println(extendRE(prueba));
-    //auxPosiciones(extendRE(prueba));
-    //numAletra(2, prueba);
-    //relaciones(auxPosiciones(extendRE(prueba)));
-    //firstPos(relaciones(auxPosiciones(extendRE(prueba))));
+    String test = extendRE(prueba);
+    ArrayList<lP> aux = auxPosiciones(extendRE(prueba));
+    ArrayList<Integer> firstpos = firstPos(relaciones(auxPosiciones(extendRE(prueba))));
+    System.out.println("firstPos: "+firstpos.toString());
     ArrayList<lP> inicio = relaciones(auxPosiciones(extendRE(prueba)));
     followPs( inicio );
-    conexionesFULL(inicio);
+    HashMap<Integer, ArrayList<Integer>> follow = conexionesFULL(inicio);
+    //ERtoAFD(firstpos,follow,test);
     //printHash(conexiones(inicio,conexiones));
-    
+    HashMap<lP, ArrayList<Integer>> hashnuevo = new HashMap<lP, ArrayList<Integer>>();
+    follow2Pos(follow,hashnuevo,firstpos,test, aux);
   }
   
 }
