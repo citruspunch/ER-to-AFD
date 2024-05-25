@@ -238,7 +238,7 @@ public class ER{
           }
         }
         writer.write(System.lineSeparator());
-    }
+      }
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
@@ -277,7 +277,8 @@ public class ER{
   }
   public static void main(String args[]) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
-    
+    System.out.println("Ingrese la ruta del archivo: ");
+    String path = teclado.readLine();
     char[] alfabeto = {'a', 'b'};
     System.out.println("ALFABETO: " + Arrays.toString(alfabeto));
     int cantEstados = 4;
@@ -286,7 +287,7 @@ public class ER{
       {0, 1, 2, 1},
     }; 
     int[] estadosFinales = {1};
-    ER er = new ER();
+    ER er = new ER(path);
     er.toGLD(alfabeto, AFD, cantEstados, estadosFinales, true);
     er.minimizarAFD(AFD, alfabeto, cantEstados, estadosFinales, true);
   }
