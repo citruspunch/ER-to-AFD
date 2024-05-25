@@ -293,10 +293,28 @@ public class ER{
   }
   public static void main(String args[]) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
+    System.out.println("MENU");
+    System.out.println("1. Convertir Archivo AFD a GLD");
+    System.out.println("2. Minimizar AFD");
+    System.out.println("3. Aceptación de cuerda");
+    System.out.println("Ingrese la opcion: ");
+    int opcion = Integer.parseInt(teclado.readLine());
     System.out.println("Ingrese la ruta del archivo: ");
     String path = teclado.readLine();
     ER er = new ER(path);
-    er.toGLD(true);
-    er.minimizarAFD(true);
+    if (opcion == 1){
+      er.toGLD(true);
+    } else if (opcion == 2){
+      er.minimizarAFD(true);
+    } else if (opcion == 3){
+      System.out.println("Ingrese la cuerda a evaluar: ");
+      String cuerda = teclado.readLine();
+      boolean aceptado = er.parsingAFD(cuerda, er.afdTransiciones, er.estadosFinales);
+      if (aceptado){
+        System.out.println("La cuerda es aceptada");
+      } else {
+        System.out.println("La cuerda no es aceptada");
+      }
+    }
   }
 }
