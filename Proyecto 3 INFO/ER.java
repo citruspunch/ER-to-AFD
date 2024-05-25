@@ -9,49 +9,46 @@ public class ER{
   private char[] alfabeto;
   private int cantEstados;
   private int[] estadosFinales;
-	private String[][] matrizTransicion;
-  
+  private int[][] afdTransiciones;
+
   public ER(String path){
-    // Se lee el archivo y se almacena la informacion en las variables
-		String[] contenido = readFile(path).split("\n");
-		// Se guarda el alfabeto
-		String[] alfabetoStrings = contenido[0].split(",");
-		alfabeto = new char[alfabetoStrings.length];
-		for (int i = 0; i < alfabetoStrings.length; i++) {
-			alfabeto[i] = alfabetoStrings[i].charAt(0);
-		}
-		// Se guarda la cantidad de estados
-		cantEstados = Integer.parseInt(contenido[1]);
-		// Se inicializa el arreglo de estados finales
-		estadosFinales = new int[contenido[2].split(",").length];
-		// Se guardan los estados finales
-		for (int i = 0; i < estadosFinales.length; i++) {
-			estadosFinales[i] = Integer.parseInt(contenido[2].split(",")[i]);
-		}
-		// Se guarda la matriz de transicion
-		matrizTransicion = new String[alfabeto.length + 1][cantEstados];
-		for (int row = 0; row <= alfabeto.length; row++) {
-			String[] transiciones = contenido[row + 3].split(","); // Se suma 3 porque las primeras 3 lineas no son transiciones
-			for (int col = 0; col < cantEstados; col++) {
-				matrizTransicion[row][col] = transiciones[col]; // Se guarda la transicion en la matriz
-			}
-		}
-  }
-  public String readFile(String path){
-		// Implementar la lectura del archivo
-		StringBuilder contenido = new StringBuilder();
-		try (BufferedReader buff = new BufferedReader(new FileReader(path))) {
+    // Implementar la lectura del archivo
+    StringBuilder contenidoPath = new StringBuilder();
+    try (BufferedReader buff = new BufferedReader(new FileReader(path))) {
       String linea;
-			// Leer el archivo linea por linea y almacenar el contenido en un StringBuilder
+      // Leer el archivo linea por linea y almacenar el contenido en un StringBuilder
       while ((linea = buff.readLine()) != null) {
-          contenido.append(linea).append("\n");
+        contenidoPath.append(linea).append("\n");
       }
     } catch (IOException e) {
       e.printStackTrace();
     }
-    return contenido.toString();
-	}
-  public ArrayList<String> toGLD(char[] alfabeto, int[][] afdTransiciones, int cantEstados, int[] estadosFinales, boolean archivo){
+    // Se lee el archivo y se almacena la informacion en las variables
+    String[] contenido = contenidoPath.toString().split("\n");
+    // Se guarda el alfabeto
+    String[] alfabetoStrings = contenido[0].split(",");
+    alfabeto = new char[alfabetoStrings.length];
+    for (int i = 0; i < alfabetoStrings.length; i++) {
+      alfabeto[i] = alfabetoStrings[i].charAt(0);
+    }
+    // Se guarda la cantidad de estados
+    cantEstados = Integer.parseInt(contenido[1]);
+    // Se inicializa el arreglo de estados finales
+    estadosFinales = new int[contenido[2].split(",").length];
+    // Se guardan los estados finales
+    for (int i = 0; i < estadosFinales.length; i++) {
+      estadosFinales[i] = Integer.parseInt(contenido[2].split(",")[i]);
+    }
+
+    afdTransiciones = new int[alfabeto.length][cantEstados];
+    for (int row = 0; row < alfabeto.length; row++) {
+      String[] transiciones = contenido[row + 3].split(","); // Se suma 3 porque las primeras 3 lineas no son transiciones
+      for (int col = 0; col < cantEstados; col++) {
+        afdTransiciones[row][col] = Integer.parseInt(transiciones[col]); // Se guarda la transicion en la matriz
+      }
+    }
+  }
+  public ArrayList<String> toGLD(boolean archivo){
     ArrayList<String> GLD = new ArrayList<String>();
     // Se crea un array de caracteres con los nombres de los simbolos no terminales
     ArrayList<Character> noTerminales = new ArrayList<Character>();
@@ -110,11 +107,11 @@ public class ER{
       for (int i = 0; i < simbolosNT.size(); i++) {
         writer.write(simbolosNT.get(i));
         if (i < simbolosNT.size() - 1) {
-          writer.write(", ");
+          writer.write(",");
         }
       }
       writer.write(System.lineSeparator());
-      writer.write("a, b, c, d" + System.lineSeparator()); 
+      writer.write("a,b,c,d" + System.lineSeparator()); 
       for (String str : GLD) {
         writer.write(str + System.lineSeparator());
       }
@@ -124,7 +121,7 @@ public class ER{
     }
   }
 
-  public void minimizarAFD(int[][] afdTransiciones, char[] alfabeto, int cantEstados, int[] estadosFinales, boolean archivo){
+  public void minimizarAFD(boolean archivo){
     ArrayList<ArrayList<Integer>> pi = new ArrayList<ArrayList<Integer>>();
     ArrayList<Integer> piNoFinales = new ArrayList<>();
     ArrayList<Integer> piFinales  = new ArrayList<>();
@@ -139,7 +136,8 @@ public class ER{
     pi.add(piFinales);
     ArrayList<ArrayList<Integer>> siguiente = new ArrayList<ArrayList<Integer>>();
     while (true) {
-      siguiente = new ArrayList<ArrayList<Integer>>(pi);
+      ArrayList<ArrayList<Integer>> copiaDePi = new ArrayList<ArrayList<Integer>>(pi);
+      siguiente = copiaDePi;
       // Recorre cada subconjunto
       for (ArrayList<Integer> subconjunto : siguiente) {
         HashMap<ArrayList<Integer>, ArrayList<Integer>> nuevosSubConjuntos = new HashMap<>();
@@ -168,12 +166,20 @@ public class ER{
 
     int cantEstadosNuevos = pi.size();
 
+    // Determinar en que arraylist se encuentra el estado de error
+    int estadoErrorIndex = encontrarEstadoError(pi);
+
+    ArrayList<Integer> estadoError = pi.get(estadoErrorIndex);
+    pi.remove(estadoErrorIndex);
+    pi.add(0, estadoError);
+
+
     int[][] transicionesMinimizadas = new int[alfabeto.length][pi.size()];
 
     for (int i = 0; i < pi.size(); i++) {
       // Como todas las transiciones son iguales, se toma el primer estado del subconjunto
       int estado = pi.get(i).get(0);
-      
+
       for (int j = 0; j < alfabeto.length; j++) {
         int transicion = afdTransiciones[j][estado];
         // Estado al que corresponde la transición
@@ -187,11 +193,12 @@ public class ER{
     for (int i = 0; i < pi.size(); i++) {
       // Como todas las transiciones son iguales, se toma el primer estado del subconjunto
       int estado = pi.get(i).get(0);
-      
+
       if (isFinal(estado, estadosFinales)) {
         estadosFinalesNuevosA.add(i);
       }
     }
+
     int[] estadosFinalesNuevos = new int[estadosFinalesNuevosA.size()];
     for (int i = 0; i < estadosFinalesNuevos.length; i++) {
       estadosFinalesNuevos[i] = estadosFinalesNuevosA.get(i);
@@ -199,8 +206,17 @@ public class ER{
 
 
     if (archivo){
-      genArchivoMinimizacion(transicionesMinimizadas, cantEstadosNuevos, alfabeto, estadosFinalesNuevos);
+      genArchivoMinimizacion(transicionesMinimizadas, cantEstadosNuevos, estadosFinalesNuevos);
     }
+  }
+
+  private int encontrarEstadoError(ArrayList<ArrayList<Integer>> conjunto) {
+    for (int i = 0; i < conjunto.size(); i++) {
+      if (conjunto.get(i).contains(ESTADOERROR)) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   private int encontrarConjunto(ArrayList<ArrayList<Integer>> conjunto, int estado) {
@@ -212,7 +228,7 @@ public class ER{
     return -1;
   }
 
-  private void genArchivoMinimizacion(int[][] transicionesMinimizadas, int cantEstados, char[] alfabeto, int[] estadosFinales) {
+  private void genArchivoMinimizacion(int[][] transicionesMinimizadas, int cantEstados, int[] estadosFinales) {
     try {
       FileWriter writer = new FileWriter("AFDmin.txt");
       for (int i = 0; i < alfabeto.length; i++) {
@@ -244,7 +260,7 @@ public class ER{
       e.printStackTrace();
     }
   }
-  
+
   public boolean parsingAFD(String cuerda, int[][] AFD, int[] estadosFinales){
     int estadoActual = ESTADOINICIAL;
     for (char c: cuerda.toCharArray()){
@@ -279,16 +295,8 @@ public class ER{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
     System.out.println("Ingrese la ruta del archivo: ");
     String path = teclado.readLine();
-    char[] alfabeto = {'a', 'b'};
-    System.out.println("ALFABETO: " + Arrays.toString(alfabeto));
-    int cantEstados = 4;
-    int[][] AFD = {
-      {1, 2, 3, 3},
-      {0, 1, 2, 1},
-    }; 
-    int[] estadosFinales = {1};
     ER er = new ER(path);
-    er.toGLD(alfabeto, AFD, cantEstados, estadosFinales, true);
-    er.minimizarAFD(AFD, alfabeto, cantEstados, estadosFinales, true);
+    er.toGLD(true);
+    er.minimizarAFD(true);
   }
 }
