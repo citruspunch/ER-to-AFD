@@ -68,16 +68,11 @@ public class ER{
     for (int col=0; col<cantEstados; col++){
       for (int row=0; row<alfabeto.length; row++){
           if (col == ESTADOERROR){
-              GLD.add(noTerminales.get(col) + " -> " + alfabeto[row] + noTerminales.get(ESTADOERROR));
+            GLD.add(noTerminales.get(col) + " -> " + alfabeto[row] + noTerminales.get(ESTADOERROR));
           } else if (col == ESTADOINICIAL){
-              GLD.add(noTerminales.get(col) + " -> " + alfabeto[row] + noTerminales.get(afdTransiciones[row][col]));
+            GLD.add(noTerminales.get(col) + " -> " + alfabeto[row] + noTerminales.get(afdTransiciones[row][col]));
           } else {
-              //boolean estadoFinal = isFinal(col, estadosFinales);
-              GLD.add(noTerminales.get(col) + " -> " + alfabeto[row] + noTerminales.get(afdTransiciones[row][col]));
-              /* Si es estado Final se agrega regla de produccion con lambda
-              if (estadoFinal){
-                  GLD.add(noTerminales.get(col) + " -> λ");
-              }*/
+            GLD.add(noTerminales.get(col) + " -> " + alfabeto[row] + noTerminales.get(afdTransiciones[row][col]));
           }
       }
     }
@@ -230,12 +225,12 @@ public class ER{
 
   private void genArchivoMinimizacion(int[][] transicionesMinimizadas, int cantEstados, int[] estadosFinales) {
     try {
-      FileWriter writer = new FileWriter("AFDmin.txt");
+      FileWriter writer = new FileWriter("AFDmin.afd");
       // Imprime el alfabeto
       for (int i = 0; i < alfabeto.length; i++) {
         writer.write(alfabeto[i]);
         if (i < alfabeto.length - 1) {
-          writer.write(", ");
+          writer.write(",");
         }
       }
       writer.write(System.lineSeparator());
@@ -244,7 +239,7 @@ public class ER{
       for (int i = 0; i < estadosFinales.length; i++) {
         writer.write(Integer.toString(estadosFinales[i]));
         if (i < estadosFinales.length - 1) {
-          writer.write(", ");
+          writer.write(",");
         }
       }
       writer.write(System.lineSeparator());
@@ -310,13 +305,18 @@ public class ER{
     } else if (opcion == 2){
       er.minimizarAFD(true);
     } else if (opcion == 3){
-      System.out.println("Ingrese la cuerda a evaluar: ");
-      String cuerda = teclado.readLine();
-      boolean aceptado = er.parsingAFD(cuerda, er.afdTransiciones, er.estadosFinales);
-      if (aceptado){
-        System.out.println("La cuerda es aceptada");
-      } else {
-        System.out.println("La cuerda no es aceptada");
+      while(true){
+        System.out.println("Ingrese la cuerda a evaluar: ");
+        String cuerda = teclado.readLine();
+        if (cuerda.isEmpty()){
+          break;
+        }
+        boolean aceptado = er.parsingAFD(cuerda, er.afdTransiciones, er.estadosFinales);
+        if (aceptado){
+          System.out.println("La cuerda es aceptada");
+        } else {
+          System.out.println("La cuerda no es aceptada");
+        }
       }
     }
   }
