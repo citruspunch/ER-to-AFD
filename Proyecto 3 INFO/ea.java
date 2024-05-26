@@ -86,16 +86,6 @@ class lP{
     return this.op2.get(num);
   }
 
-  @Override
-    public boolean equals(Object otro) {
-      if(otro instanceof lP){
-        lP otro2 = (lP) otro;
-        if(this.regex.equals(otro2.regex) && this.posEnFP.equals(otro2.posEnFP)){
-          return true;
-        }
-      }
-      return false; 
-    }
   
   public String toString(){
     StringBuilder oStr = new StringBuilder();
@@ -887,51 +877,37 @@ public class ea{
     return estados;
   }
 
-  public static void reconstruirHashFollow(HashMap<lP, ArrayList<Integer>>follow2Pos, ArrayList<ArrayList<Integer>> estados, HashMap<lP, ArrayList<Integer>>follow3Pos, String regex, ArrayList<lP> aux){
-
-    for(int y = 0; y<estados.size(); y++){
-      ArrayList<Integer> est = estados.get(y);
-      for(lP keys : follow2Pos.keySet()){
-        if(keys.posEnFP.equals(est)){
-          ArrayList<Integer> nuevo = new ArrayList<Integer>();
-          nuevo.add(y+1);
-          lP neww = new lP(nuevo,keys.regex);
-          follow3Pos.put(neww,follow2Pos.get(keys));
-        }
-      }
-    }
-
-    System.out.println(follow3Pos.toString());
-    
-  }
 
   public static int[][] transicionesAFD(HashMap<lP, ArrayList<Integer>> followPos, ArrayList<ArrayList<Integer>> estados){
-    char[] alfabeto = {'a', 'b', 'c', 'd'};
-    int[][] transiciones = new int[alfabeto.length][estados.size()+1];
-    HashMap<ArrayList<Integer>, Integer> posiciones = new HashMap<ArrayList<Integer>, Integer>();
-    for (int i = 0; i <= estados.size(); i++) {
-      posiciones.put(estados.get(i), i+1);
-    }
-    for (lP key : followPos.keySet()) {
+    
+      char[] alfabeto = {'a', 'b', 'c', 'd'};
+    
+      int[][] transiciones = new int[alfabeto.length][estados.size() + 1];
+    
+      HashMap<ArrayList<Integer>, Integer> posiciones = new HashMap<ArrayList<Integer>, Integer>();
+    
       for (int i = 0; i < estados.size(); i++) {
-        if (estados.get(i).equals(key.posEnFP)) {
-          for (int j = 0; j < alfabeto.length; j++) {
-            if (key.regex == alfabeto[j]) {
-              transiciones[j][i] = posiciones.get(key.posEnFP);
-            }else{
-              transiciones[j][i] = 0;
+        posiciones.put(estados.get(i), i + 1);
+      }
+    
+      for (lP key : followPos.keySet()) {
+        for (int i = 0; i < estados.size(); i++) {
+          if (estados.get(i).equals(key.posEnFP)) {
+            for (int j = 0; j < alfabeto.length; j++) {
+              if (key.regex == alfabeto[j]) {
+                transiciones[j][i+1] = posiciones.get(followPos.get(key));
+              }
             }
           }
         }
+      }  
+      for (int i = 0; i < transiciones.length; i++) {
+        for (int j = 0; j < transiciones[i].length; j++) {
+            System.out.print(transiciones[i][j] + " ");
+        }
+        System.out.println(); 
       }
-    }
-    for (int i = 0; i < transiciones.length; i++) {
-      for (int j = 0; j < transiciones[i].length; j++) {
-          System.out.print(transiciones[i][j] + " ");
-      }
-      System.out.println(); 
-    }
-    return transiciones;
+      return transiciones;
   }
   
   public static void imprimirAFD(HashMap<Integer, ArrayList<Integer>> estadosNuevos, ArrayList<Integer> estadosFinales){
