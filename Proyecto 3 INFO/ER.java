@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import java.util.Map.Entry;
 
 
 public class ER{
@@ -111,6 +112,7 @@ public class ER{
         writer.write(str + System.lineSeparator());
       }
       writer.close();
+      System.out.println("Archivo Creado Exitosamente en: GLD.gld");
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -140,22 +142,30 @@ public class ER{
         for (int estado : subconjunto) {
           ArrayList<Integer> transitions = new ArrayList<>();
           // Recorre cada letra del alfabeto
-          for (int j = 0; j < alfabeto.length; j++) {
-            int transicion = afdTransiciones[j][estado];
+          int letra = 0;
+          while (letra < alfabeto.length){
+            int transicion = afdTransiciones[letra][estado];
             int groupIndex = encontrarConjunto(pi, transicion);
             transitions.add(groupIndex);
+            letra++;
           }
           if (!nuevosSubConjuntos.containsKey(transitions)) {
-            nuevosSubConjuntos.put(transitions, new ArrayList<>());
+            ArrayList<Integer> nuevoSubConjunto = new ArrayList<>();
+            nuevosSubConjuntos.put(transitions, nuevoSubConjunto);
           }
-          nuevosSubConjuntos.get(transitions).add(estado);
+          ArrayList<Integer> subConjuntoDeEstado = nuevosSubConjuntos.get(transitions);
+          subConjuntoDeEstado.add(estado);
         }
         pi.remove(subconjunto);
-        pi.addAll(nuevosSubConjuntos.values());
+        for (ArrayList<Integer> nuevos : nuevosSubConjuntos.values()) {
+          pi.add(nuevos);
+        }
       }
-      // Si tiene las mismas particiones terminamos
-      if (siguiente.size() == pi.size()) {
-        break;
+      if (siguiente.size() > 0 && pi.size() > 0){
+        // Si tiene las mismas particiones terminamos
+        if (siguiente.size() == pi.size()) {
+          break;
+        }
       }
     }
 
@@ -167,6 +177,19 @@ public class ER{
     ArrayList<Integer> estadoError = pi.get(estadoErrorIndex);
     pi.remove(estadoErrorIndex);
     pi.add(0, estadoError);
+    
+    int estadoInicialIndex = encontrarEstadoInicial(pi);
+    ArrayList<Integer> estadoInicial = pi.get(estadoInicialIndex);
+    pi.remove(estadoInicialIndex);
+    pi.add(1, estadoInicial);
+    
+    for(int i=2; i<cantEstadosNuevos; i++){
+      int estadoIndex = encontrarConjunto(pi, i);
+      ArrayList<Integer> estado = pi.get(estadoIndex);
+      pi.remove(estadoIndex);
+      pi.add(i, estado);
+    }
+    
 
 
     int[][] transicionesMinimizadas = new int[alfabeto.length][pi.size()];
@@ -214,6 +237,15 @@ public class ER{
     return -1;
   }
 
+  private int encontrarEstadoInicial(ArrayList<ArrayList<Integer>> conjunto){
+    for (int i = 0; i < conjunto.size(); i++) {
+        if (conjunto.get(i).contains(ESTADOINICIAL)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
   private int encontrarConjunto(ArrayList<ArrayList<Integer>> conjunto, int estado) {
     for (int i = 0; i < conjunto.size(); i++) {
       if (conjunto.get(i).contains(estado)) {
@@ -248,12 +280,13 @@ public class ER{
         for (int col = 0; col < transicionesMinimizadas[fila].length; col++) {
           writer.write(Integer.toString(transicionesMinimizadas[fila][col]));
           if (col < transicionesMinimizadas[fila].length - 1) {
-            writer.write(", ");
+            writer.write(",");
           }
         }
         writer.write(System.lineSeparator());
       }
       writer.close();
+      System.out.println("Archivo Creado Exitosamente en: AFDmin.afd");
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -262,7 +295,13 @@ public class ER{
   public boolean parsingAFD(String cuerda, int[][] AFD, int[] estadosFinales){
     int estadoActual = ESTADOINICIAL;
     for (char c: cuerda.toCharArray()){
-      if (c != 'a' && c != 'b' && c != 'c' && c != 'd'){
+      boolean encontrado = false;
+      for (char letra : alfabeto){
+        if (c == letra){
+          encontrado = true;
+        }
+      }
+      if (!encontrado){
         return false;
       }
       int cIndex = getCharIndex(c);
