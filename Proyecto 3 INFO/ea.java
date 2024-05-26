@@ -3,7 +3,7 @@ import java.io.*;
 
 class lP{
   //Esta clase es un apoyo, sirve para distinguir con que caracter de la expresion regular estamos tratando, si se trata de una letra, "a", o un operador, "*" y asi poder asignarle una posicion concreta y estática a cada letra para que en el resto de métodos siempre tengamos consistencia con las posiciones.
-  
+
   protected Character regex;
   protected boolean kleene,or,concat,er,hashtag;
   protected ArrayList<Integer> posLetraActual, posLetraNext, posEnFP, posConLetra;
@@ -21,7 +21,7 @@ class lP{
     this.posLetraActual = new ArrayList<Integer>();
     this.posLetraNext = new ArrayList<Integer>();
   }
-  
+
  //Constructor sobrecargado para las letas
   public lP(char regex, int num){
     this(regex);
@@ -86,7 +86,17 @@ class lP{
     return this.op2.get(num);
   }
 
-  
+  @Override
+    public boolean equals(Object otro) {
+      if(otro instanceof lP){
+        lP otro2 = (lP) otro;
+        if(this.regex.equals(otro2.regex) && this.posEnFP.equals(otro2.posEnFP)){
+          return true;
+        }
+      }
+      return false; 
+    }
+
   public String toString(){
     StringBuilder oStr = new StringBuilder();
     if(this.getRegex() == '*' || this.getRegex()=='.' || this.getRegex()== '+' || this.getRegex()== '|' || this.getRegex()== ')' || this.getRegex()== '(' ){
@@ -115,7 +125,7 @@ public class ea{
 
   public static boolean inAlfabeto(char r){
   //Este metodo nos dice si un carcater pertenece al alfabeto con el que estamos trabajando.
-    
+
     for(int l = 0; l<alfabeto.length; l++){
       if(r == alfabeto[l]){
         return true;
@@ -138,7 +148,7 @@ public class ea{
 
   public static String extendRE(String re){
 //Se encarga de agregar el caracter # donde debe finalizar la expresion regular, asi como agregar un "." donde hay concatenaciones y cambiar la clausura positiva + a una expresion de la forma a.a* .
-    
+
     StringBuilder extendedRE = new StringBuilder();
     boolean foundParentesis = false;
     StringBuilder aux = new StringBuilder();
@@ -152,7 +162,7 @@ public class ea{
       char reActual = re.charAt(i);
       char reNext = (i+1<re.length()) ? re.charAt(i+1):'\0';
       char reAnt = (i-1>= 0) ? re.charAt(i-1):'\0';
-      
+
 //---------------------------------------------------------------
       //Buscamos los lugares correctos en los casos de Or donde poner el #.
       if(reActual == '('){
@@ -171,7 +181,7 @@ public class ea{
       } 
 //---------------------------------------------------------------
 //Hacemos la conversion de b+ a b.b* la idea es que el caso inmediado de b+ b.b* se evalua viendo el caracter anterior si es del alfabeto y para el caso de los parentesis en un array metimos todas las posiciones donde encontramos un parentesis entpnces evalua si el caracter actual es + y si el anterior es un parentesis ) saca a el parentesis de cierre del array y hace recursion con la expresion de dentro. 
-      
+
       if(reActual == '+'){
         if (inAlfabeto(reAnt)) {
           extendedRE.deleteCharAt(extendedRE.length()-1);
@@ -225,10 +235,10 @@ public class ea{
 
   public static ArrayList<lP> auxPosiciones(String regex){
     //Este metodo hace un arraylist de objetos lP los cuales representan a los caracterres de la expresion regular junto a su posicion asocidada, basicamente sirve para tener un orden en la expresion regular y que las posiciones de cada letra no se pierdan sino que se queden adheridas a cada letra siempre. 
-    
+
     ArrayList<lP> posAux = new ArrayList<lP>();
     int positionen = 1;
-    
+
     for(int i = 0; i<regex.length(); i++){
       char charAct = regex.charAt(i);
       if(inAlfabeto(charAct)){
@@ -260,13 +270,13 @@ public class ea{
     System.out.println("\n");*/
     return posAux;
   }
-  
+
   /*funcion: 
 [{ . -> [{ . -> [{ . -> [{ a -> [1], [1] }], [{ b -> [2], [2] }] }], [{ a -> [3], [3] }] }], [{ # -> [4], [4] }] }]*/
 
   public static ArrayList<lP> relacionesParentesis(ArrayList<lP> auxPosiciones){
   /*Esta funcion sirve para evaluar las expresiones dentro de parentesis, basicamente va agregando a un array las posiciones donde encuentre paréntesis y cuando estos se cierren crea un array auxiliar para meter los objetos del array original que estaban en parentesis a el array auxiliar, luego llamamos a ka funcion relacionesSINparentesis que es el mismo caso de esta funcion pero para expresiones que no llevan parentesis, se procesa y se mete a un nuevo array luego la expresion ya procesada se mete de nuevo en el array original y se continua el ciclo hasta que ya no hayan mas exoresiones en oarentesis por evaluar*/
-    
+
     ArrayList<lP> funcion = new ArrayList<lP>(auxPosiciones);
     ArrayList<Integer> start = new ArrayList<Integer>();
     ArrayList<Integer> end = new ArrayList<Integer>();
@@ -290,11 +300,11 @@ public class ea{
             auxAux.add(funcion.get(i));
           }
           //System.out.println("auxAux: "+auxAux.toString());
-          
+
           ArrayList<lP> auxFuncion = relacionesSINparentesis(auxAux);
-          
+
           //System.out.println("AuxF: "+auxFuncion.toString());
-          
+
           for(int o = ende; o>starte -1; o--){
             funcion.remove(o);
           }
@@ -327,9 +337,9 @@ public class ea{
 
   public static ArrayList<lP> relacionesSINparentesis(ArrayList<lP> auxPosiciones){
   /*Esta funcion crea las relaciones entre operadores y letras, es decir, el propópsito de esta funcion es determinar a que cosas afecta cierto operador, por ejemplo a|b esta funcion nos dice a que operandos esta afectando el operador or, en este caso a,b y el resultado de eso lo devuelve como un array, utilizamos 3 fors para recorrer la expresion y haciendo las operaciones requeridas, el primer for se encarga de hacer la relacion para los operadores kleene, el segundo for para los operadores concatenacion y el tercero para los operadores or y en dichos fors se evalua cada caso posible*/
-    
+
     ArrayList<lP> funcion = new ArrayList<lP>(auxPosiciones);
-    
+
     for(int m = 0; m<funcion.size(); m++){
       lP opActKleene = funcion.get(m);
 
@@ -435,30 +445,30 @@ public class ea{
 
   public static ArrayList<Integer> firstPos(ArrayList<lP> fin){
     /*Una vez obtenido el array definitivo con las funciones anteriores hacemos un for para recorrer a todos los elementos de este y en cada iteracion iremos evaluando lo siguiente, si estamos en una concatenacion su primera posicion será lo que tenga a la izquierda siempre y cuando esta expresion no sea un operador, si lo es, metemos ese operador al array posiblefirstPos y llamamos recursivamente a firstPos() con el array de posibles. Luego para los ors operamos de manera similar, si a sus lados tiene solo letras estas seran posibles posiciones, si no, de nuevo metemos el operador a el array de posibles y hacemos recursividad con este, ahora para el caso de kleene, este en el 99% de los casos estara metido entre una concatenacion por lo que lo evaluamos dentro de los ifs de las concatenaciones diciendo que si la concatenacion tiene un kleene en su lado izquierdo debemos agregar a firstPos el lado izquiero y derecho de la expresion por aquello que kleene puede ser lambda, de lo contrario hacemos el if especifico de kleene y agreamos su posicion correspondiente a firstpos*/
-    
+
     ArrayList<lP> posiblefirstPos = new ArrayList<lP>();
     ArrayList<Integer> firstPosA = new ArrayList<Integer>();
-    
+
     for(int a = 0; a<fin.size(); a++){
       lP analisis = fin.get(a);
       if(analisis.getConcat()){
         lP letra1 = analisis.devolverLetra1(0);
         lP letra2 = analisis.devolverLetra2(0);
-        
+
         if(inAlfabeto(letra1.getRegex()) ){
           firstPosA.add( letra1.posLetraActual.get(0) );
-          
+
         } else if(inAlfabeto(letra1.getRegex()) && inOps(letra2.getRegex()) ){
           firstPosA.add( letra1.posLetraActual.get(0) );
-          
+
         } else if( inOps(letra1.getRegex())  ){
           if(letra1.getKleene()){
-            
+
             if(inAlfabeto(letra2.getRegex())){
               firstPosA.add( letra2.posLetraActual.get(0) );
               posiblefirstPos.add(letra1);
               firstPosA.addAll(firstPos(posiblefirstPos));
-              
+
             } else if(inOps(letra2.getRegex())){
               posiblefirstPos.add(letra1);
               posiblefirstPos.add(letra2);
@@ -469,7 +479,7 @@ public class ea{
             firstPosA.addAll(firstPos(posiblefirstPos));
           }
         }
-        
+
       } else if(analisis.getOr()){
         lP letra1 = analisis.devolverLetra1(0);
         lP letra2 = analisis.devolverLetra2(0);
@@ -477,12 +487,12 @@ public class ea{
         if( inAlfabeto(letra1.getRegex()) && inAlfabeto(letra2.getRegex()) ){
           firstPosA.add( letra1.posLetraActual.get(0) );
           firstPosA.add( letra2.posLetraActual.get(0) );
-          
+
         } else if( inAlfabeto(letra1.getRegex()) && inOps(letra2.getRegex()) ){
           firstPosA.add( letra1.posLetraActual.get(0) );
           posiblefirstPos.add(letra2);
           firstPosA.addAll(firstPos(posiblefirstPos));
-          
+
         } else if( inOps(letra1.getRegex()) && inAlfabeto(letra2.getRegex()) ){
           posiblefirstPos.add(letra1);
           firstPosA.addAll(firstPos(posiblefirstPos));
@@ -492,7 +502,7 @@ public class ea{
           posiblefirstPos.add(letra2);
           firstPosA.addAll(firstPos(posiblefirstPos));
         }
-        
+
       } else if(analisis.getKleene()){
         lP letra1 = analisis.devolverLetra1(0);
         if(inAlfabeto(letra1.getRegex())){
@@ -502,7 +512,7 @@ public class ea{
           firstPosA.addAll(firstPos(posiblefirstPos));
         }
       }
-      
+
     }
 //Quitamos posiciones que se hayan agregado repetidas
     HashSet<Integer> transitorio = new HashSet<Integer>();
@@ -512,7 +522,7 @@ public class ea{
     }
 
     firstPosA.addAll(transitorio);
-    
+
     /*System.out.println(posiblefirstPos.toString());*/
     /*System.out.println(firstPosA.toString());*/
     return firstPosA; 
@@ -569,7 +579,7 @@ public class ea{
           recursion.addAll(letra2.posLetraNext);
           recursion2.addAll(letra1.posLetraNext);
         }
-    
+
         ArrayList<Integer> noDuplicados = quitarDuplicados(recursion);
         if(!noDuplicados.isEmpty()) {
           inicio.posLetraNext.addAll(noDuplicados);
@@ -634,7 +644,7 @@ public class ea{
     }
     //System.out.println("FINAL:"+fin.toString());
   }
-  
+
   public static ArrayList<Integer> quitarDuplicados(ArrayList<Integer> duplicados){
     ArrayList<Integer> noDuplicados =  new ArrayList<Integer>();
     for(int i = 0; i<duplicados.size(); i++){
@@ -658,7 +668,7 @@ public class ea{
             if(!conex.containsKey(posicion)){
               conex.put(posicion,new ArrayList<Integer>());
             }
-            
+
             conex.get(posicion).addAll(letra2.posLetraActual);
             quitarDuplicados(conex.get(posicion));
           }
@@ -746,7 +756,7 @@ public class ea{
     System.out.println(regex);
     estados.add(0,quitarDuplicados(orden(firstPos)));
     System.out.println("firstPos:"+estados.get(0).toString());
-    
+
     for(int x = 0; x<estados.size(); x++){
       ArrayList<Integer> analisis = estados.get(x);
       ArrayList<Integer> letraA = new ArrayList<Integer>();
@@ -755,7 +765,7 @@ public class ea{
       ArrayList<Integer> letraD = new ArrayList<Integer>();
       ArrayList<Integer> hashtag = new ArrayList<Integer>();
       //System.out.println("analisis:"+analisis.toString());
-      
+
       for(int w = 0; w<analisis.size(); w++){
         int pos = analisis.get(w);
         //System.out.println("pos: "+pos);
@@ -777,7 +787,7 @@ public class ea{
         } else {
           continue;
         }
-        
+
       }
       ArrayList<Integer> nuevoA = new ArrayList<Integer>();
       if(!letraA.isEmpty()){
@@ -870,26 +880,43 @@ public class ea{
           estados.add(nuevoDorden);
         }
       }
-    
+
     }
     //System.out.println("estados:"+estados.toString());
     //System.out.println(follow2Pos.toString());
     return estados;
   }
 
+  public static void reconstruirHashFollow(HashMap<lP, ArrayList<Integer>>follow2Pos, ArrayList<ArrayList<Integer>> estados, HashMap<lP, ArrayList<Integer>>follow3Pos, String regex, ArrayList<lP> aux){
+
+    for(int y = 0; y<estados.size(); y++){
+      ArrayList<Integer> est = estados.get(y);
+      for(lP keys : follow2Pos.keySet()){
+        if(keys.posEnFP.equals(est)){
+          ArrayList<Integer> nuevo = new ArrayList<Integer>();
+          nuevo.add(y+1);
+          lP neww = new lP(nuevo,keys.regex);
+          follow3Pos.put(neww,follow2Pos.get(keys));
+        }
+      }
+    }
+
+    System.out.println(follow3Pos.toString());
+
+  }
 
   public static int[][] transicionesAFD(HashMap<lP, ArrayList<Integer>> followPos, ArrayList<ArrayList<Integer>> estados){
-    
+
       char[] alfabeto = {'a', 'b', 'c', 'd'};
-    
+
       int[][] transiciones = new int[alfabeto.length][estados.size() + 1];
-    
+
       HashMap<ArrayList<Integer>, Integer> posiciones = new HashMap<ArrayList<Integer>, Integer>();
-    
+
       for (int i = 0; i < estados.size(); i++) {
         posiciones.put(estados.get(i), i + 1);
       }
-    
+
       for (lP key : followPos.keySet()) {
         for (int i = 0; i < estados.size(); i++) {
           if (estados.get(i).equals(key.posEnFP)) {
@@ -914,6 +941,7 @@ public class ea{
     try {
       FileWriter writer = new FileWriter("AFDregex.txt");
       // Imprimir alfabeto
+      char[] alfabeto = {'a', 'b', 'c', 'd'};
       for (int i = 0; i < alfabeto.length; i++) {
         writer.write(alfabeto[i]);
         if (i < alfabeto.length - 1) {
@@ -922,7 +950,7 @@ public class ea{
       }
       writer.write(System.lineSeparator());
       // Imprimir cantidad de estados
-      writer.write(transiciones[0].length);
+      writer.write(Integer.toString(transiciones[0].length));
       writer.write(System.lineSeparator());
       // Imprimir estados finales
       for (int i = 0; i < estadosFinales.size(); i++) {
@@ -933,23 +961,22 @@ public class ea{
       }
       writer.write(System.lineSeparator());
       // Imprimir estados
-      for (int i = 1; i <= transiciones.length; i++) {
-        for (int j = 0; j < alfabeto.length; j++) {
-          writer.write(transiciones[i].toString());
-          if (j < alfabeto.length - 1) {
-            writer.write(",");
+      for (int i = 0; i < transiciones.length; i++) {
+          for (int j = 0; j < transiciones[i].length; j++) {
+              writer.write(Integer.toString(transiciones[i][j]));
+              if (j < transiciones[i].length - 1) {
+                  writer.write(",");
+              }
           }
-        }
-        writer.write(System.lineSeparator());
-      }      
-      writer.write(System.lineSeparator());
+          writer.write(System.lineSeparator());
+      }     
       writer.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
-  
+
 
   public static void main(String[] args) throws Exception{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
@@ -970,7 +997,21 @@ public class ea{
     System.out.println("ESTADOS"+follow2Pos(follow,hashnuevo,firstpos,test, aux).toString());
     //reconstruirHashFollow(hashnuevo,estado,hashReconstruido, test, aux);
     //System.out.println("hashReconstruido: "+hashReconstruido.toString());
-    int[][] array = transicionesAFD(hashnuevo,estado);
+    int[][] transiciones = transicionesAFD(hashnuevo,estado);
+    HashMap<ArrayList<Integer>, Integer> posiciones = new HashMap<ArrayList<Integer>, Integer>();
+    for (int i = 0; i < estado.size(); i++) {
+      posiciones.put(estado.get(i), i + 1); 
+    }
+    ArrayList<Integer> estadosFinales = new ArrayList<Integer>();
+    for (int i = 0; i < estado.size(); i++) {
+        ArrayList<Integer> estadoActual = estado.get(i);
+        for (Integer numero : estadoActual) {
+            if (numAletra(numero, prueba, aux) == '#') {
+                estadosFinales.add(i + 1);
+                break;
+            }
+        }
+    }
+    imprimirAFD(transiciones, estadosFinales);
   }
-  
 }
