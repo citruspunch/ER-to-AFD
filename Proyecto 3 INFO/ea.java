@@ -1318,6 +1318,5 @@ public class ea{
         }
       }
     }
-    imprimirAFD(transiciones, estadosFinales);
   }
 }
