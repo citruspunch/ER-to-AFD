@@ -934,7 +934,7 @@ public class ea{
     return transiciones;
   }
   
-  public static void imprimirAFD(HashMap<Integer, ArrayList<Integer>> estadosNuevos, ArrayList<Integer> estadosFinales){
+  public static void imprimirAFD(int[][]transiciones, ArrayList<Integer> estadosFinales){
     try {
       FileWriter writer = new FileWriter("AFDregex.txt");
       // Imprimir alfabeto
@@ -946,7 +946,7 @@ public class ea{
       }
       writer.write(System.lineSeparator());
       // Imprimir cantidad de estados
-      writer.write(estadosNuevos.size());
+      writer.write(transiciones[0].length);
       writer.write(System.lineSeparator());
       // Imprimir estados finales
       for (int i = 0; i < estadosFinales.size(); i++) {
@@ -957,9 +957,9 @@ public class ea{
       }
       writer.write(System.lineSeparator());
       // Imprimir estados
-      for (int i = 1; i <= estadosNuevos.size(); i++) {
+      for (int i = 1; i <= transiciones.length; i++) {
         for (int j = 0; j < alfabeto.length; j++) {
-          writer.write(estadosNuevos.get(i).toString());
+          writer.write(transiciones[i].toString());
           if (j < alfabeto.length - 1) {
             writer.write(",");
           }
