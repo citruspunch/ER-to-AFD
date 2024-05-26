@@ -86,16 +86,6 @@ class lP{
     return this.op2.get(num);
   }
 
-  @Override
-    public boolean equals(Object otro) {
-      if(otro instanceof lP){
-        lP otro2 = (lP) otro;
-        if(this.regex.equals(otro2.regex) && this.posEnFP.equals(otro2.posEnFP)){
-          return true;
-        }
-      }
-      return false; 
-    }
 
   public String toString(){
     StringBuilder oStr = new StringBuilder();
