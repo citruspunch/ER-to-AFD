@@ -10,7 +10,7 @@ class lP{
   protected ArrayList<lP> op1, op2;
   protected int num;
 
-  //contructor general usando principalmente para los operadores.
+  //contructor general usando para los operadores.
   public lP(char regex){
     this.regex = regex;
     this.kleene = false;
@@ -525,7 +525,7 @@ public class ea{
     for(int p = 0; p<posiciones.size(); p++){
       lP letraBuscada = posiciones.get(p);
       if(letraBuscada.posLetraActual.contains(num)){
-        System.out.println("letra: "+letraBuscada.getRegex());
+        //System.out.println("letra: "+letraBuscada.getRegex());
         return letraBuscada.getRegex();
       }
     }
@@ -646,7 +646,6 @@ public class ea{
     return noDuplicados;
   }
 
-
   public static void conexiones(ArrayList<lP> folow, HashMap<Integer, ArrayList<Integer>> conex){
     try{
       for(int d = 0; d<folow.size(); d++){
@@ -689,7 +688,7 @@ public class ea{
   public static HashMap<Integer, ArrayList<Integer>> conexionesFULL(ArrayList<lP> folow){
     HashMap<Integer, ArrayList<Integer>> conex = new HashMap<Integer, ArrayList<Integer>>();
     conexiones(folow,conex);
-    System.out.println("conex:" + conex.toString());
+    System.out.println("TABLITA:" + conex.toString());
     return conex;
   }
 
@@ -703,19 +702,49 @@ public class ea{
     return false;
   }
 
-  /*public static ArrayList<Integer> orden(ArrayList<Integer> nuevo){
-    
-  }*/
+  public static ArrayList<Integer> orden(ArrayList<Integer> ant){
+    //es un bubble sort
+    ArrayList<Integer> nuevo = new ArrayList<Integer>(ant);
+    int i,j,change;
+    boolean cambio;
+    for(i = 0; i<nuevo.size()-1; i++){
+      cambio = false;
+      for(j=0; j<nuevo.size()-1; j++ ){
+        if(nuevo.get(j) > nuevo.get(j+1)){
+          change = nuevo.get(j);
+          nuevo.set(j,nuevo.get(j+1));
+          nuevo.set(j+1, change);
+          cambio=true;
+        }
+      }
+      if(cambio==false){
+        break;
+      }
+    }
+    return nuevo;
+  }
+
+  public static void transicionesInexistentes(HashMap<lP, ArrayList<Integer>>follow2Pos, ArrayList<Integer> analisis, char a, String regex, ArrayList<lP> aux){
+    lP transInexistente = new lP(analisis,a);
+    for(int l =0; l<analisis.size(); l++){
+      int pos = analisis.get(l);
+      if(numAletra(pos,regex, aux) == '#')
+        transInexistente.hashtag=true;
+    }
+    if(!follow2Pos.containsKey(transInexistente)){
+      follow2Pos.put(transInexistente, new ArrayList<Integer>(analisis));
+    }
+  }
 
 
-  public static void follow2Pos(HashMap<Integer, ArrayList<Integer>> conex, HashMap<lP, ArrayList<Integer>>follow2Pos, ArrayList<Integer> firstPos, String regex, ArrayList<lP> aux){
+  public static ArrayList<ArrayList<Integer>> follow2Pos(HashMap<Integer, ArrayList<Integer>> conex, HashMap<lP, ArrayList<Integer>>follow2Pos, ArrayList<Integer> firstPos, String regex, ArrayList<lP> aux){
     ArrayList<ArrayList<Integer>> estados = new ArrayList<ArrayList<Integer>>();
     //[[1,2,3],[2,3,4],..,[1,5,6]]
     //[1,2,3] con a -> [1,2]
     //lp[1,2,3],a - >[1,2]
     //hashmap([1,2,3],a)=[1,2]
     System.out.println(regex);
-    estados.add(0,firstPos);
+    estados.add(0,quitarDuplicados(orden(firstPos)));
     System.out.println("firstPos:"+estados.get(0).toString());
     
     for(int x = 0; x<estados.size(); x++){
@@ -724,23 +753,27 @@ public class ea{
       ArrayList<Integer> letraB = new ArrayList<Integer>();
       ArrayList<Integer> letraC = new ArrayList<Integer>();
       ArrayList<Integer> letraD = new ArrayList<Integer>();
-      System.out.println("analisis:"+analisis.toString());
+      ArrayList<Integer> hashtag = new ArrayList<Integer>();
+      //System.out.println("analisis:"+analisis.toString());
       
       for(int w = 0; w<analisis.size(); w++){
         int pos = analisis.get(w);
-        System.out.println("pos: "+pos);
+        //System.out.println("pos: "+pos);
         if(numAletra(pos,regex,aux) == 'a'){
           letraA.add(pos);
-          System.out.println("A:"+letraA.toString());
+          //System.out.println("A:"+letraA.toString());
         } else if(numAletra(pos,regex, aux) == 'b'){
           letraB.add(pos);
-          System.out.println("B:"+letraB.toString());
+          //System.out.println("B:"+letraB.toString());
         } else if(numAletra(pos,regex,aux) == 'c'){
           letraC.add(pos);
-          System.out.println("C:"+letraC.toString());
+          //System.out.println("C:"+letraC.toString());
         } else if(numAletra(pos,regex,aux) == 'd'){
           letraD.add(pos);
-          System.out.println("D:"+letraD.toString());
+          //System.out.println("D:"+letraD.toString());
+        } else if(numAletra(pos,regex,aux) == '#'){
+          hashtag.add(pos);
+          //System.out.println("D:"+hashtag.toString());
         } else {
           continue;
         }
@@ -751,12 +784,21 @@ public class ea{
         for(int l = 0; l<letraA.size(); l++){
           int a = letraA.get(l);
           nuevoA.addAll(conex.get(a));
-          System.out.println("nuevoA: "+nuevoA.toString());
+          //System.out.println("nuevoA: "+nuevoA.toString());
         }
+        ArrayList<Integer> nuevoAorden = quitarDuplicados(orden(nuevoA));
         lP transicion = new lP(analisis,'a');
-        follow2Pos.put(transicion,nuevoA);
-        if(!estados.contains(nuevoA)){
-          estados.add(nuevoA);
+        for(int z = 0; z<hashtag.size(); z++){
+          int hashAct = hashtag.get(z);
+          for(int k = 0; k<nuevoAorden.size(); k++){
+            if(nuevoAorden.contains(hashAct)){
+              transicion.hashtag = true;
+            }
+          }
+        }
+        follow2Pos.put(transicion,nuevoAorden);
+        if(!estados.contains(nuevoAorden)){
+          estados.add(nuevoAorden);
         }
       }
 
@@ -765,12 +807,21 @@ public class ea{
         for(int l = 0; l<letraB.size(); l++){
           int b = letraB.get(l);
           nuevoB.addAll(conex.get(b));
-          System.out.println("nuevoB: "+nuevoB.toString());
+          //System.out.println("nuevoB: "+nuevoB.toString());
         }
+        ArrayList<Integer> nuevoBorden = quitarDuplicados(orden(nuevoB));
         lP transicionB = new lP(analisis,'b');
-        follow2Pos.put(transicionB,nuevoB);
-        if(!estados.contains(nuevoB)){
-          estados.add(nuevoB);
+        for(int z = 0; z<hashtag.size(); z++){
+          int hashAct = hashtag.get(z);
+          for(int k = 0; k<nuevoBorden.size(); k++){
+            if(nuevoBorden.contains(hashAct)){
+              transicionB.hashtag = true;
+            }
+          }
+        }
+        follow2Pos.put(transicionB,nuevoBorden);
+        if(!estados.contains(nuevoBorden)){
+          estados.add(nuevoBorden);
         }
       }
 
@@ -779,12 +830,21 @@ public class ea{
         for(int l = 0; l<letraC.size(); l++){
           int c = letraC.get(l);
           nuevoC.addAll(conex.get(c));
-          System.out.println("nuevoC: "+nuevoC.toString());
+          //System.out.println("nuevoC: "+nuevoC.toString());
         }
+        ArrayList<Integer> nuevoCorden = quitarDuplicados(orden(nuevoC));
         lP transicionC = new lP(analisis,'c');
-        follow2Pos.put(transicionC,nuevoC);
-        if(!estados.contains(nuevoC)){
-          estados.add(nuevoC);
+        for(int z = 0; z<hashtag.size(); z++){
+          int hashAct = hashtag.get(z);
+          for(int k = 0; k<nuevoCorden.size(); k++){
+            if(nuevoCorden.contains(hashAct)){
+              transicionC.hashtag = true;
+            }
+          }
+        }
+        follow2Pos.put(transicionC,nuevoCorden);
+        if(!estados.contains(nuevoCorden)){
+          estados.add(nuevoCorden);
         }
       }
 
@@ -793,22 +853,48 @@ public class ea{
         for(int l = 0; l<letraD.size(); l++){
           int d = letraD.get(l);
           nuevoD.addAll(conex.get(d));
-          System.out.println("nuevoD: "+nuevoD.toString());
+          //System.out.println("nuevoD: "+nuevoD.toString());
         }
+        ArrayList<Integer> nuevoDorden = quitarDuplicados(orden(nuevoD));
         lP transicionD = new lP(analisis,'d');
-        follow2Pos.put(transicionD,nuevoD);
-        if(!estados.contains(nuevoD)){
-          estados.add(nuevoD);
+        for(int z = 0; z<hashtag.size(); z++){
+          int hashAct = hashtag.get(z);
+          for(int k = 0; k<nuevoDorden.size(); k++){
+            if(nuevoDorden.contains(hashAct)){
+              transicionD.hashtag = true;
+            }
+          }
+        }
+        follow2Pos.put(transicionD,nuevoDorden);
+        if(!estados.contains(nuevoDorden)){
+          estados.add(nuevoDorden);
         }
       }
-      
+    
     }
-    System.out.println(follow2Pos.toString());
+    //System.out.println("estados:"+estados.toString());
+    //System.out.println(follow2Pos.toString());
+    return estados;
   }
 
+  public static void reconstruirHashFollow(HashMap<lP, ArrayList<Integer>>follow2Pos, ArrayList<ArrayList<Integer>> estados, HashMap<lP, ArrayList<Integer>>follow3Pos, String regex, ArrayList<lP> aux){
 
+    ArrayList<Integer> cont = new ArrayList<Integer>();
+    for(int y = 0; y<estados.size(); y++){
+      int con = 1;
+      cont.add(con);
+      for(lP key : follow2Pos.keySet()){
+        if(key.posEnFP.equals(estados.get(y))){
+          lP keyNueva = new lP(cont,key.regex);
+          follow3Pos.put(keyNueva, follow2Pos.get(key));
+          con++;
+        }
+      }
+    }
 
-  
+    System.out.println(follow3Pos.toString());
+    
+  }
   
   public static void imprimirAFD(HashMap<Integer, ArrayList<Integer>> estadosNuevos, ArrayList<Integer> estadosFinales){
     try {
@@ -859,14 +945,18 @@ public class ea{
     String test = extendRE(prueba);
     ArrayList<lP> aux = auxPosiciones(extendRE(prueba));
     ArrayList<Integer> firstpos = firstPos(relaciones(auxPosiciones(extendRE(prueba))));
-    System.out.println("firstPos: "+firstpos.toString());
+    //System.out.println("firstPos: "+firstpos.toString());
     ArrayList<lP> inicio = relaciones(auxPosiciones(extendRE(prueba)));
     followPs( inicio );
     HashMap<Integer, ArrayList<Integer>> follow = conexionesFULL(inicio);
-    //ERtoAFD(firstpos,follow,test);
-    //printHash(conexiones(inicio,conexiones));
     HashMap<lP, ArrayList<Integer>> hashnuevo = new HashMap<lP, ArrayList<Integer>>();
-    follow2Pos(follow,hashnuevo,firstpos,test, aux);
+    HashMap<lP, ArrayList<Integer>> hashReconstruido = new HashMap<lP, ArrayList<Integer>>();
+    ArrayList<ArrayList<Integer>> estado = follow2Pos(follow,hashnuevo,firstpos,test, aux);
+    System.out.println("TRANSICIONES: "+hashnuevo.toString());
+    System.out.println("ESTADOS"+follow2Pos(follow,hashnuevo,firstpos,test, aux).toString());
+    //reconstruirHashFollow(hashnuevo,estado,hashReconstruido, test, aux);
+    //System.out.println("hashReconstruido: "+hashReconstruido.toString());
+    
   }
   
 }
