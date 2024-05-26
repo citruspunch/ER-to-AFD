@@ -698,7 +698,7 @@ public class ea{
   public static HashMap<Integer, ArrayList<Integer>> conexionesFULL(ArrayList<lP> folow){
     HashMap<Integer, ArrayList<Integer>> conex = new HashMap<Integer, ArrayList<Integer>>();
     conexiones(folow,conex);
-    System.out.println("TABLITA:" + conex.toString());
+    //System.out.println("TABLITA:" + conex.toString());
     return conex;
   }
 
@@ -928,18 +928,12 @@ public class ea{
           }
         }
       }  
-      for (int i = 0; i < transiciones.length; i++) {
-        for (int j = 0; j < transiciones[i].length; j++) {
-            System.out.print(transiciones[i][j] + " ");
-        }
-        System.out.println(); 
-      }
       return transiciones;
   }
-  
+
   public static void imprimirAFD(int[][]transiciones, ArrayList<Integer> estadosFinales){
     try {
-      FileWriter writer = new FileWriter("AFDregex.afd");
+      FileWriter writer = new FileWriter("AFDregex.txt");
       // Imprimir alfabeto
       char[] alfabeto = {'a', 'b', 'c', 'd'};
       for (int i = 0; i < alfabeto.length; i++) {
@@ -982,7 +976,7 @@ public class ea{
     BufferedReader teclado = new BufferedReader(new InputStreamReader(System.in));
     System.out.println("write: ");
     String prueba = teclado.readLine();
-    System.out.println(extendRE(prueba));
+    //System.out.println(extendRE(prueba));
     String test = extendRE(prueba);
     ArrayList<lP> aux = auxPosiciones(extendRE(prueba));
     ArrayList<Integer> firstpos = firstPos(relaciones(auxPosiciones(extendRE(prueba))));
@@ -993,8 +987,8 @@ public class ea{
     HashMap<lP, ArrayList<Integer>> hashnuevo = new HashMap<lP, ArrayList<Integer>>();
     HashMap<lP, ArrayList<Integer>> hashReconstruido = new HashMap<lP, ArrayList<Integer>>();
     ArrayList<ArrayList<Integer>> estado = follow2Pos(follow,hashnuevo,firstpos,test, aux);
-    System.out.println("TRANSICIONES: "+hashnuevo.toString());
-    System.out.println("ESTADOS"+follow2Pos(follow,hashnuevo,firstpos,test, aux).toString());
+    //System.out.println("TRANSICIONES: "+hashnuevo.toString());
+    //System.out.println("ESTADOS"+follow2Pos(follow,hashnuevo,firstpos,test, aux).toString());
     //reconstruirHashFollow(hashnuevo,estado,hashReconstruido, test, aux);
     //System.out.println("hashReconstruido: "+hashReconstruido.toString());
     int[][] transiciones = transicionesAFD(hashnuevo,estado);
