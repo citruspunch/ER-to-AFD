@@ -939,7 +939,7 @@ public class ea{
   
   public static void imprimirAFD(int[][]transiciones, ArrayList<Integer> estadosFinales){
     try {
-      FileWriter writer = new FileWriter("AFDregex.txt");
+      FileWriter writer = new FileWriter("AFDregex.afd");
       // Imprimir alfabeto
       char[] alfabeto = {'a', 'b', 'c', 'd'};
       for (int i = 0; i < alfabeto.length; i++) {
